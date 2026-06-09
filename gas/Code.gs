@@ -118,6 +118,8 @@ function buildHtml(r) {
 
   // キャプション・タグ
   html = html.replace(/{{REQUIRED_CAPTION}}/g,  esc(r['必須キャプション'] || ''));
+  html = html.replace(/{{CAPTION_NOTE}}/g,     (r['キャプション補足'] || '') ? '<p style="font-size:12px;color:var(--light);margin-top:8px;">📌 ' + escNl(r['キャプション補足']) + '</p>' : '');
+  html = html.replace(/{{HASHTAGS_NOTE}}/g,    (r['ハッシュタグ補足'] || '') ? '<p style="font-size:12px;color:var(--light);margin-top:4px;">📌 ' + escNl(r['ハッシュタグ補足']) + '</p>' : '');
   html = html.replace(/{{HASHTAGS_HTML}}/g,      buildHashtagsHtml(r['必須ハッシュタグ（スペース区切り）'] || ''));
   html = html.replace(/{{ACCOUNT_TAGS_HTML}}/g,  buildAccountTagsHtml(r));
 
