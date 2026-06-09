@@ -10,6 +10,7 @@ function doPost(e) {
   try {
     const r = e.parameter;
     if ((r['action'] || 'create') === 'update') return handleUpdate(r);
+    if (r['action'] === 'delete') return handleDelete(r);
     return handleCreate(r);
   } catch(err) {
     Logger.log('Error: ' + err.message);
@@ -43,6 +44,57 @@ function handleCreate(r) {
 
   return ContentService.createTextOutput(JSON.stringify({ success:true, pageUrl, deliveryUrl:delivUrl }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// ── 削除 ──────────────────────────────────────────────
+function handleDelete(r) {
+  const slug = r['slug'];
+  if (!slug) throw new Error('slug が指定されていません');
+  const cfg = getConfig();
+
+  // index.html からカードを除去
+  removeIndexCard_(r, slug);
+
+  // briefs/{slug}/ 配下のファイルを削除
+  ['index.html', 'delivery.html', 'data.json'].forEach(function(file) {
+    try { deleteGithubFile_('briefs/' + slug + '/' + file, cfg); } catch(e) {}
+  });
+
+  return ContentService.createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function removeIndexCard_(r, slug) {
+  const cfg = getConfig();
+  const url = 'https://api.github.com/repos/' + cfg.GITHUB_OWNER + '/' + cfg.GITHUB_REPO + '/contents/index.html';
+  let html = '', sha = '';
+  try {
+    const res = UrlFetchApp.fetch(url, { headers:{ Authorization:'***'+cfg.GITHUB_TOKEN }, muteHttpExceptions:true });
+    if (res.getResponseCode() !== 200) return;
+    const d = JSON.parse(res.getContentText());
+    sha = d.sha;
+    html = Utilities.newBlob(Utilities.base64Decode(d.content)).getDataAsString();
+  } catch(e) { return; }
+
+  // data-slug="{slug}" のカード全体を除去
+  const re = new RegExp('\\s*<div class="brief-card" data-slug="' + slug + '">[\\s\\S]*?</div>\\s*</div>', 'g');
+  const newHtml = html.replace(re, '');
+  if (newHtml === html) return;
+  pushToGitHub('index.html', newHtml, '🗑 Delete card: ' + slug);
+}
+
+function deleteGithubFile_(path, cfg) {
+  const url = 'https://api.github.com/repos/' + cfg.GITHUB_OWNER + '/' + cfg.GITHUB_REPO + '/contents/' + path;
+  const res = UrlFetchApp.fetch(url, { headers:{ Authorization:'***'+cfg.GITHUB_TOKEN }, muteHttpExceptions:true });
+  if (res.getResponseCode() !== 200) return;
+  const sha = JSON.parse(res.getContentText()).sha;
+  UrlFetchApp.fetch(url, {
+    method: 'delete',
+    headers: { Authorization:'***'+cfg.GITHUB_TOKEN, 'Content-Type':'application/json' },
+    payload: JSON.stringify({ message:'🗑 Delete brief file: ' + path, sha: sha }),
+    muteHttpExceptions: true
+  });
 }
 
 // ── 更新 ──────────────────────────────────────────────
@@ -137,7 +189,7 @@ function buildDeliveryHtml_(r, gasEndpoint) {
 '    .field label{display:block;font-size:12px;font-weight:700;color:var(--mid);margin-bottom:5px;}\n' +
 '    .field label .req{color:#E53935;margin-left:3px;}\n' +
 '    .field label .opt{color:var(--light);font-weight:400;margin-left:4px;font-size:11px;}\n' +
-'    .field input,.field textarea,.field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:11px 13px;font-size:14px;font-family:"Noto Sans JP",sans-serif;background:var(--white);color:var(--text);transition:border-color 0.15s;-webkit-appearance:none;appearance:none;}\n' +
+'    .field input:not([type="radio"]),.field textarea,.field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:11px 13px;font-size:14px;font-family:"Noto Sans JP",sans-serif;background:var(--white);color:var(--text);transition:border-color 0.15s;-webkit-appearance:none;appearance:none;}\n' +
 '    .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(26,26,26,0.08);}\n' +
 '    .field textarea{min-height:80px;resize:vertical;}\n' +
 '    .field .hint{font-size:11px;color:var(--light);margin-top:4px;}\n' +
@@ -147,7 +199,7 @@ function buildDeliveryHtml_(r, gasEndpoint) {
 '    .radio-group{display:flex;flex-direction:column;gap:8px;}\n' +
 '    .radio-item{display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.15s;}\n' +
 '    .radio-item:has(input:checked){border-color:var(--accent);background:var(--section-bg);}\n' +
-'    .radio-item input[type="radio"]{width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--accent);}\n' +
+'    .radio-item input[type="radio"]{width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--accent);-webkit-appearance:radio;appearance:radio;}\n' +
 '    .radio-label{font-size:13px;font-weight:700;color:var(--text);}\n' +
 '    .radio-desc{font-size:11px;color:var(--light);margin-top:1px;}\n' +
 '    .submit-btn{width:100%;background:var(--accent);color:white;border:none;border-radius:8px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s;margin-top:32px;}\n' +
