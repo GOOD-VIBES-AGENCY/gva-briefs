@@ -11,24 +11,11 @@
     body{background:var(--bg);font-family:"Noto Sans JP",sans-serif;font-size:14px;color:var(--accent);line-height:1.7;}
 
     /* ── PIN ── */
-    #pin-screen{position:fixed;inset:0;background:#111;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:9999;}
-    #pin-screen.hidden{display:none;}
-    .pin-logo{color:rgba(255,255,255,0.3);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;}
-    .pin-title{color:#fff;font-size:20px;font-weight:700;margin-bottom:4px;}
-    .pin-dots{display:flex;gap:16px;margin:8px 0;}
-    .pin-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.25);transition:background 0.15s,border-color 0.15s;}
-    .pin-dot.filled{background:#fff;border-color:#fff;}
-    .pin-hidden{position:fixed;left:-9999px;opacity:0;}
-    .pin-area{cursor:text;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 40px 10px;}
-    .pin-hint{color:rgba(255,255,255,0.2);font-size:11px;letter-spacing:0.06em;}
-    .pin-btn{margin-top:4px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);border-radius:8px;padding:10px 40px;font-size:13px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;transition:all 0.15s;}
-    .pin-btn:hover{background:rgba(255,255,255,0.16);color:#fff;}
-    .pin-btn:active{background:rgba(255,255,255,0.22);}
-    .pin-error{color:#FF6B6B;font-size:12px;min-height:16px;}
+    
 
     /* ── App ── */
-    #app{display:none;}
-    #app.visible{display:block;}
+    #app{display:block;}
+    
     .app-header{background:var(--accent);padding:0;}
     .app-header-inner{max-width:860px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:12px;}
     .app-logo{color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;}
@@ -121,10 +108,6 @@
   </style>
 </head>
 <body>
-
-<!-- ── PIN 画面 ── -->
-<div id="pin-screen">
-  <div class="pin-logo">GOOD VIBES AGENCY</div>
   <div class="pin-title">PINを入力</div>
   <div class="pin-area" id="pin-area">
     <div class="pin-dots">
@@ -149,8 +132,7 @@
         <div class="app-title">案件管理</div>
       </div>
       <button class="header-btn primary" id="new-btn">＋ 新規作成</button>
-      <button class="logout-btn" id="logout-btn">ログアウト</button>
-    </div>
+          </div>
   </div>
   <div class="main">
     <div class="list-header">
@@ -286,8 +268,6 @@
 
 <script>
 const PAGES_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
-const PIN_CORRECT = '0331';
-const LS_PIN = 'gva_pin_ok';
 const LS_GAS = 'gva_gas_endpoint';
 
 
@@ -720,13 +700,8 @@ document.getElementById('df').addEventListener('submit',async function(e){e.prev
 }
 
 // ── PIN ──
-function initPin() {
-  if (localStorage.getItem(LS_PIN) === '1') { showApp(); return; }
-  document.getElementById('pin-screen').classList.remove('hidden');
-  var _ph=document.getElementById('pin-hidden'); if(_ph){updateDots('');_ph.focus();}if(p0)p0.focus();}
-}
+
 function showApp() {
-  document.getElementById('pin-screen').classList.add('hidden');
   document.getElementById('app').classList.add('visible');
   const saved = localStorage.getItem(LS_GAS);
   if (saved && document.getElementById('gas-url-input')) document.getElementById('gas-url-input').value = saved;
@@ -736,10 +711,7 @@ function showApp() {
 
 );
 
-document.getElementById('logout-btn').addEventListener('click', () => {
-  localStorage.removeItem(LS_PIN);
-  location.reload();
-});
+
 
 // ── モーダル開閉 ──
 function openModal() {
@@ -996,44 +968,9 @@ async function submitEdit(slug, gasEp) {
 }
 
 
-// ── PIN ──
-function updateDots(val) {
-  for (var i = 0; i < 4; i++) {
-    var d = document.getElementById('dot' + i);
-    if (d) d.className = 'pin-dot' + (i < val.length ? ' filled' : '');
-  }
-}
-function checkPin() {
-  var h = document.getElementById('pin-hidden');
-  var _ph=document.getElementById('pin-hidden'); if(_ph){updateDots('');_ph.focus();}
-  } else {
-    document.getElementById('pin-error').textContent = 'PINが正しくありません';
-    if (h) { h.value = ''; h.focus(); }
-    updateDots('');
-    setTimeout(function() { document.getElementById('pin-error').textContent = ''; }, 2000);
-  }
-}
-(function() {
-  var h = document.getElementById('pin-hidden');
-  var area = document.getElementById('pin-area');
-  var btn = document.getElementById('pin-btn');
-  if (area) area.addEventListener('click', function() { if (h) h.focus(); });
-  if (btn)  btn.addEventListener('click', checkPin);
-  if (h) {
-    h.addEventListener('input', function() {
-      var v = this.value.replace(/[^0-9]/g, '').slice(0, 4);
-      this.value = v;
-      updateDots(v);
-      if (v.length === 4) checkPin();
-    });
-    h.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') checkPin();
-    });
-  }
-})();
 
 // ── 起動 ──
-initPin();
+showApp();
 
 
 </script>
