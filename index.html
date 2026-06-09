@@ -104,6 +104,11 @@
     .preview-modal-head h3{font-size:13px;font-weight:700;color:var(--mid);}
     .preview-frame{flex:1;border:none;width:100%;}
 
+
+    .brief-card{position:relative;}
+    .card-delete-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:#CCC;font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;opacity:0;transition:all 0.15s;}
+    .brief-card:hover .card-delete-btn{opacity:1;}
+    .card-delete-btn:hover{background:#FFF0F0;color:#E53935;}
     @media(max-width:600px){.m-2col{grid-template-columns:1fr;}.brief-grid{grid-template-columns:1fr;}.modal-body{padding:20px 16px;}.app-header-inner{flex-wrap:wrap;gap:8px;}}
   </style>
 </head>
@@ -130,20 +135,10 @@
         <div class="app-logo">GOOD VIBES AGENCY</div>
         <div class="app-title">案件管理</div>
       </div>
-      <button class="header-btn" id="settings-toggle">⚙️ 設定</button>
       <button class="header-btn primary" id="new-btn">＋ 新規作成</button>
       <button class="logout-btn" id="logout-btn">ログアウト</button>
     </div>
   </div>
-
-  <div class="settings-bar" id="settings-bar">
-    <div class="settings-inner">
-      <label>GAS Web App URL</label>
-      <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/...">
-      <button class="settings-save" id="settings-save">保存</button>
-    </div>
-  </div>
-
   <div class="main">
     <div class="list-header">
       <h2>案件一覧</h2>
@@ -716,15 +711,6 @@ document.getElementById('logout-btn').addEventListener('click', () => {
   location.reload();
 });
 
-// ── 設定 ──
-document.getElementById('settings-toggle').addEventListener('click', () => {
-  document.getElementById('settings-bar').classList.toggle('open');
-});
-document.getElementById('settings-save').addEventListener('click', () => {
-  const v = document.getElementById('gas-url-input').value.trim();
-  if (v) { localStorage.setItem(LS_GAS, v); alert('保存しました'); }
-});
-
 // ── モーダル開閉 ──
 function openModal() {
   document.getElementById('new-modal').classList.add('open');
@@ -755,6 +741,30 @@ document.getElementById('preview-close').addEventListener('click', () => {
   document.getElementById('preview-overlay').classList.remove('open');
   document.body.style.overflow = '';
 });
+
+
+// ── 削除 ──
+async function deleteCard(slug, title) {
+  if (!confirm('この案件を削除しますか？\n\n「' + title + '」\n\n※ 依頼ページ・配送フォームも削除されます。元に戻せません。')) return;
+  const gasEp = localStorage.getItem(LS_GAS);
+  if (!gasEp) { alert('GAS URLが設定されていません'); return; }
+  const btn = document.querySelector(`[data-slug="${slug}"] .card-delete-btn`);
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+  const params = new URLSearchParams({ action: 'delete', slug });
+  try {
+    await fetch(gasEp, { method: 'POST', mode: 'no-cors', body: params });
+    const card = document.querySelector(`[data-slug="${slug}"]`);
+    if (card) card.remove();
+    // カードが全部なくなったら空メッセージを表示
+    const grid = document.getElementById('brief-grid');
+    if (grid && !grid.querySelector('.brief-card')) {
+      grid.innerHTML = '<div class="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>';
+    }
+  } catch(e) {
+    alert('削除に失敗しました。しばらく後に再試行してください。');
+    if (btn) { btn.textContent = '🗑'; btn.disabled = false; }
+  }
+}
 
 // ── 新規作成送信 ──
 document.getElementById('submit-btn').addEventListener('click', async () => {
