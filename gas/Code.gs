@@ -257,7 +257,7 @@ function buildPostExamplesHtml(raw) {
       <div class="post-example">
         <div class="platform-badge">${esc(platform)}</div>
         <p class="desc">${esc(desc)}</p>
-        ${url ? `<a href="${esc(url)}" target="_blank">👉 投稿を見る</a>` : ''}
+        ${url ? '<a href="' + url.replace(/"/g,'%22') + '" target="_blank" class="post-example-link">投稿を見る →</a>' : ''}
       </div>`;
   }).join('\n');
 
@@ -510,7 +510,7 @@ const TEMPLATE = `<!DOCTYPE html>
     .post-example{background:white;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px;}
     .post-example .platform-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--mid);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;}
     .post-example .desc{font-size:13px;color:var(--mid);margin-bottom:10px;line-height:1.7;}
-    .post-example a{display:inline-flex;align-items:center;gap:5px;background:var(--section-bg);border:1px solid var(--border);color:var(--rose-deep);font-size:12px;padding:6px 14px;border-radius:7px;text-decoration:none;transition:all 0.2s;}
+    .post-example a,.post-example-link{display:inline-flex;align-items:center;gap:5px;background:var(--section-bg);border:1px solid var(--border);color:var(--rose-deep);font-size:12px;padding:6px 14px;border-radius:7px;text-decoration:none;transition:all 0.2s;}
     .flow-steps{display:flex;flex-direction:column;gap:0;}
     .flow-step{display:flex;align-items:flex-start;gap:16px;position:relative;padding-bottom:24px;}
     .flow-step:last-child{padding-bottom:0;}
@@ -527,33 +527,7 @@ const TEMPLATE = `<!DOCTYPE html>
     .contact-item .handle{font-size:13px;font-weight:600;color:var(--rose-deep);}
     .footer{text-align:center;padding:32px 16px;color:var(--light);font-size:12px;border-top:1px solid var(--border);margin-top:40px;}
 
-    /* ── 編集パネル ── */
-    .edit-fab{position:fixed;bottom:24px;right:24px;background:#1A1A1A;color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:16px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;z-index:100;transition:transform 0.2s;}
-    .edit-fab:hover{transform:scale(1.1);}
-    body.ep-open{overflow:hidden;}
-    .edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;}
-    body.ep-open .edit-overlay{display:block;}
-    .edit-panel{position:fixed;top:0;right:-100%;width:min(480px,100%);height:100%;background:#fff;z-index:201;overflow-y:auto;transition:right 0.3s ease;box-shadow:-2px 0 20px rgba(0,0,0,0.12);}
-    body.ep-open .edit-panel{right:0;}
-    .ep-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #E0E0E0;position:sticky;top:0;background:#fff;z-index:1;}
-    .ep-head h2{font-size:14px;font-weight:700;}
-    .ep-xbtn{background:none;border:none;font-size:20px;cursor:pointer;color:#999;line-height:1;padding:4px;}
-    .ep-body{padding:20px;}
-    .ep-sec{font-size:10px;font-weight:700;color:#BBB;letter-spacing:0.1em;text-transform:uppercase;margin:20px 0 8px;padding-bottom:4px;border-bottom:1px solid #F0F0F0;}
-    .ep-f{margin-bottom:10px;}
-    .ep-f label{display:block;font-size:11px;font-weight:700;color:#666;margin-bottom:3px;}
-    .ep-f .r{color:#E53935;margin-left:2px;}
-    .ep-f input,.ep-f textarea{width:100%;border:1px solid #E0E0E0;border-radius:5px;padding:8px 10px;font-size:13px;font-family:inherit;resize:vertical;background:#fff;color:#1A1A1A;}
-    .ep-f input:focus,.ep-f textarea:focus{outline:none;border-color:#1A1A1A;}
-    .ep-f textarea{min-height:64px;}
-    .ep-f textarea.t{min-height:100px;}
-    .ep-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-    .ep-faq{background:#F9F9F9;border:1px solid #E8E8E8;border-radius:6px;padding:10px;margin-bottom:6px;}
-    .ep-faq-n{font-size:10px;font-weight:700;color:#CCC;margin-bottom:6px;letter-spacing:0.1em;text-transform:uppercase;}
-    .ep-save{width:100%;background:#1A1A1A;color:#fff;border:none;border-radius:7px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;transition:opacity 0.15s;}
-    .ep-save:hover{opacity:0.82;}
-    .ep-save:disabled{opacity:0.35;cursor:not-allowed;}
-    .ep-status{text-align:center;padding:8px;font-size:12px;color:#555;min-height:24px;}
+    
     @media(max-width:480px){.contact-grid{grid-template-columns:1fr;}.summary-table td:first-child{width:100px;}.tag-label{width:100px;}}
   </style>
 </head>
@@ -614,7 +588,7 @@ const TEMPLATE = `<!DOCTYPE html>
         <div class="tag-label">＃ ハッシュタグ<br>（必須）</div>
         <div class="tag-value">
               {{HASHTAGS_HTML}}
-              <button class="copy-btn" style="position:relative;margin-top:8px;" onclick="copyHashtags(this)">コピー</button>
+              <button class="copy-hint" onclick="copyHashtags(this)">📋 コピー</button>
               {{HASHTAGS_NOTE}}
             </div>
       </div>
@@ -641,8 +615,8 @@ const TEMPLATE = `<!DOCTYPE html>
   </div>
 </div>
 
-<button class="edit-fab" id="edit-fab" title="依頼ページを編集">✏️</button>
-<div class="edit-overlay" id="edit-overlay"></div>
+
+
 <div class="edit-panel" id="edit-panel">
   <div class="ep-head"><h2>✏️ 依頼ページを編集</h2><button class="ep-xbtn" id="ep-xbtn">✕</button></div>
   <div class="ep-body">
