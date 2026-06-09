@@ -17,7 +17,7 @@ function getConfig() {
     GITHUB_TOKEN:   props.getProperty('GITHUB_TOKEN') || '',
     GITHUB_OWNER:  'GOOD-VIBES-AGENCY',
     GITHUB_REPO:   'gva-briefs',
-    PAGES_BASE_URL: 'https://good-vibes-agency.github.io/gva-briefs',
+    PAGES_BASE_URL: 'https://goodvibesagency.tokyo/gva-briefs',
     NOTIFY_EMAIL:  '' // 完了通知を送るメールアドレス（空欄でスキップ）
   };
 }
@@ -240,8 +240,8 @@ function buildPostExamplesHtml(raw) {
   if (items.length === 0) return '';
 
   const exHtml = items.map(line => {
-    const parts = line.split('|');
-    const platform = parts[0] ? parts[0].trim() : '';
+    const parts = line.split(/[|｜]/);
+    const platform = parts[0] ? parts[0].trim().replace(/^#+\s*/, '').trim() : '';
     const desc     = parts[1] ? parts[1].trim() : '';
     const url      = parts[2] ? parts[2].trim() : '';
     return `
@@ -271,7 +271,7 @@ function buildContactHtml(raw) {
   const platformIcons = { Instagram: '📸', X: '🐦', TikTok: '🎵', LINE: '💬' };
   return raw.split('\n').filter(s => s.trim()).map(line => {
     const parts    = line.split('|');
-    const platform = parts[0] ? parts[0].trim() : '';
+    const platform = parts[0] ? parts[0].trim().replace(/^#+\s*/, '').trim() : '';
     const url      = parts[1] ? parts[1].trim() : '';
     const icon     = platformIcons[platform] || '📨';
     const href     = url.startsWith('http') ? url : '#';
@@ -599,11 +599,15 @@ const TEMPLATE = `<!DOCTYPE html>
     <div class="tags-card">
       <div class="tag-row">
         <div class="tag-label">📝 キャプション<br>（必須）</div>
-        <div class="tag-value"><div class="copyable-block" id="caption-block">{{REQUIRED_CAPTION}}<button class="copy-btn" onclick="copyText('caption-block',this)">コピー</button></div></div>
+        <div class="tag-value"><div class="copyable-block" id="caption-block">{{REQUIRED_CAPTION}}<button class="copy-btn" onclick="copyText('caption-block',this)">コピー</button></div>{{CAPTION_NOTE}}</div>
       </div>
       <div class="tag-row">
         <div class="tag-label">＃ ハッシュタグ<br>（必須）</div>
-        <div class="tag-value">{{HASHTAGS_HTML}}</div>
+        <div class="tag-value">
+              {{HASHTAGS_HTML}}
+              <button class="copy-btn" style="position:relative;margin-top:8px;" onclick="copyHashtags(this)">コピー</button>
+              {{HASHTAGS_NOTE}}
+            </div>
       </div>
       <div class="tag-row">
         <div class="tag-label">📱 アカウント<br>タグ付け（必須）</div>
@@ -688,6 +692,14 @@ const TEMPLATE = `<!DOCTYPE html>
 </div>
 <div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
 <script>
+function copyHashtags(btn){
+  var tags=document.querySelectorAll('.hashtag');
+  var text=Array.from(tags).map(function(t){return t.textContent;}).join(' ');
+  navigator.clipboard.writeText(text).then(function(){
+    btn.textContent='✓ コピー完了';btn.classList.add('copied');
+    setTimeout(function(){btn.textContent='コピー';btn.classList.remove('copied');},2000);
+  });
+}
 function copyText(blockId,btn){
   const block=document.getElementById(blockId);
   const text=block.innerText.replace('コピー','').trim();
