@@ -421,7 +421,9 @@ function buildIndexHtml(firstCard) {
   <div class="grid">
     ${firstCard}
     <!-- BRIEFS_LIST -->
-  </div>
+  
+<div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
+</div>
 </body>
 </html>`;
 }
