@@ -607,62 +607,7 @@ const TEMPLATE = `<!DOCTYPE html>
 
 
 
-<div class="edit-panel" id="edit-panel">
-  <div class="ep-head"><h2>✏️ 依頼ページを編集</h2><button class="ep-xbtn" id="ep-xbtn">✕</button></div>
-  <div class="ep-body">
-    <div id="ep-loading" style="text-align:center;padding:40px;color:#999;font-size:13px">読み込み中...</div>
-    <form id="ep-form" style="display:none">
-      <div class="ep-sec">基本情報</div>
-      <div class="ep-f"><label>ページタイトル <span class="r">*</span></label><input type="text" name="ページタイトル" required></div>
-      <div class="ep-2">
-        <div class="ep-f"><label>月度ラベル</label><input type="text" name="月度ラベル"></div>
-        <div class="ep-f"><label>ブランド名 <span class="r">*</span></label><input type="text" name="ブランド名" required></div>
-      </div>
-      <div class="ep-f"><label>商品公式サイトURL <span class="r">*</span></label><input type="url" name="商品公式サイトURL" required></div>
-      <div class="ep-sec">案件概要</div>
-      <div class="ep-f"><label>お願いしたいこと（説明） <span class="r">*</span></label><textarea name="お願いしたいこと（説明）" class="t" required></textarea></div>
-      <div class="ep-f"><label>投稿期間（テキスト） <span class="r">*</span></label><textarea name="投稿期間（テキスト）" required></textarea></div>
-      <div class="ep-2">
-        <div class="ep-f"><label>応募締切 <span class="r">*</span></label><input type="text" name="応募締切" required></div>
-        <div class="ep-f"><label>報酬（商品名・金額） <span class="r">*</span></label><input type="text" name="報酬（商品名・金額）" required></div>
-      </div>
-      <div class="ep-f"><label>投稿媒体 <span class="r">*</span></label><textarea name="投稿媒体" required></textarea></div>
-      <div class="ep-f"><label>投稿内容 <span class="r">*</span></label><textarea name="投稿内容" required></textarea></div>
-      <div class="ep-sec">商品情報</div>
-      <div class="ep-f"><label>商品説明テキスト <span class="r">*</span></label><textarea name="商品説明テキスト" class="t" required></textarea></div>
-      <div class="ep-f"><label>こんな人にオススメ（改行区切り）</label><textarea name="こんな人にオススメ（改行区切り）"></textarea></div>
-      <div class="ep-f"><label>商品名（表記） <span class="r">*</span></label><textarea name="商品名（表記）" required></textarea></div>
-      <div class="ep-2">
-        <div class="ep-f"><label>容量・内容量</label><input type="text" name="容量・内容量"></div>
-        <div class="ep-f"><label>販売価格</label><input type="text" name="販売価格"></div>
-      </div>
-      <div class="ep-f"><label>販売先</label><textarea name="販売先"></textarea></div>
-      <div class="ep-sec">FAQ（最大5件）</div>
-      <div class="ep-faq"><div class="ep-faq-n">FAQ 1</div><div class="ep-f"><input type="text" name="FAQ質問1" placeholder="Q"></div><div class="ep-f" style="margin-bottom:0"><textarea name="FAQ回答1" placeholder="A"></textarea></div></div>
-      <div class="ep-faq"><div class="ep-faq-n">FAQ 2</div><div class="ep-f"><input type="text" name="FAQ質問2" placeholder="Q"></div><div class="ep-f" style="margin-bottom:0"><textarea name="FAQ回答2" placeholder="A"></textarea></div></div>
-      <div class="ep-faq"><div class="ep-faq-n">FAQ 3</div><div class="ep-f"><input type="text" name="FAQ質問3" placeholder="Q"></div><div class="ep-f" style="margin-bottom:0"><textarea name="FAQ回答3" placeholder="A"></textarea></div></div>
-      <div class="ep-faq"><div class="ep-faq-n">FAQ 4</div><div class="ep-f"><input type="text" name="FAQ質問4" placeholder="Q"></div><div class="ep-f" style="margin-bottom:0"><textarea name="FAQ回答4" placeholder="A"></textarea></div></div>
-      <div class="ep-faq"><div class="ep-faq-n">FAQ 5</div><div class="ep-f"><input type="text" name="FAQ質問5" placeholder="Q"></div><div class="ep-f" style="margin-bottom:0"><textarea name="FAQ回答5" placeholder="A"></textarea></div></div>
-      <div class="ep-sec">NG事項 &amp; 必須表現</div>
-      <div class="ep-f"><label>NG事項（改行区切り） <span class="r">*</span></label><textarea name="NG事項（改行区切り）" class="t" required></textarea></div>
-      <div class="ep-f"><label>必須キャプション <span class="r">*</span></label><textarea name="必須キャプション" required></textarea></div>
-      <div class="ep-f"><label>必須ハッシュタグ（スペース区切り） <span class="r">*</span></label><input type="text" name="必須ハッシュタグ（スペース区切り）" required></div>
-      <div class="ep-2">
-        <div class="ep-f"><label>Instagramアカウントタグ</label><input type="text" name="Instagramアカウントタグ"></div>
-        <div class="ep-f"><label>TikTokアカウントタグ</label><input type="text" name="TikTokアカウントタグ"></div>
-      </div>
-      <div class="ep-2">
-        <div class="ep-f"><label>Xアカウントタグ</label><input type="text" name="Xアカウントタグ"></div>
-        <div class="ep-f"><label>X投稿用リンク（任意）</label><input type="text" name="X投稿用リンク（任意）"></div>
-      </div>
-      <div class="ep-sec">参考例・フロー</div>
-      <div class="ep-f"><label>過去の投稿例（改行区切り）</label><textarea name="過去の投稿例（改行区切り）" class="t"></textarea></div>
-      <div class="ep-f"><label>お問い合わせ先（改行区切り） <span class="r">*</span></label><textarea name="お問い合わせ先（改行区切り）" required></textarea></div>
-      <button type="submit" class="ep-save" id="ep-save">保存する</button>
-      <div class="ep-status" id="ep-status"></div>
-    </form>
-  </div>
-</div>
+
 
 <script>
 function copyHashtags(btn){
