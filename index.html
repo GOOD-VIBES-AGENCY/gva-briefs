@@ -126,6 +126,7 @@
     <input class="pin-box" id="p2" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
     <input class="pin-box" id="p3" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
   </div>
+  <button onclick="checkPin()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);border-radius:8px;padding:8px 28px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:4px;">確認</button>
   <div class="pin-error" id="pin-error"></div>
 </div>
 
@@ -721,15 +722,17 @@ function showApp() {
   if (saved && document.getElementById('gas-url-input')) document.getElementById('gas-url-input').value = saved;
   setTimeout(injectCardButtons, 50);
 }
-document.querySelectorAll('.pin-box').forEach((box, i) => {
-  box.addEventListener('input', e => {
-    const v = e.target.value.replace(/[^0-9]/g,'');
-    e.target.value = v;
-    if (v && i < 3) document.getElementById('p'+(i+1)).focus();
-    if (i === 3 && v) checkPin();
+// PIN入力
+var pinBoxes = document.querySelectorAll('.pin-box');
+pinBoxes.forEach(function(box, i) {
+  box.addEventListener('input', function() {
+    var v = this.value.replace(/[^0-9]/g, '');
+    this.value = v ? v[0] : '';
+    if (this.value && i < 3) pinBoxes[i+1].focus();
+    if (i === 3 && this.value) checkPin();
   });
-  box.addEventListener('keydown', e => {
-    if (e.key === 'Backspace' && !e.target.value && i > 0) document.getElementById('p'+(i-1)).focus();
+  box.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' && !this.value && i > 0) pinBoxes[i-1].focus();
     if (e.key === 'Enter') checkPin();
   });
 });
@@ -784,17 +787,11 @@ document.getElementById('preview-close').addEventListener('click', () => {
 
 // ── 削除 ──
 async function deleteCard(slug, title) {
-  // PIN確認モーダルを表示
-  const pin = window.prompt('🗑 案件を削除します
+  if (!confirm('この案件を削除しますか？
 
 「' + title + '」
 
-削除するにはPINを入力してください：');
-  if (pin === null) return; // キャンセル
-  if (pin !== PIN_CORRECT) {
-    alert('PINが正しくありません。削除をキャンセルしました。');
-    return;
-  }
+※ 依頼ページ・配送フォームも削除されます。元に戻せません。')) return;
   const gasEp = localStorage.getItem(LS_GAS);
   if (!gasEp) { alert('GAS URLが設定されていません'); return; }
   const btn = document.querySelector(`[data-slug="${slug}"] .card-delete-btn`);
