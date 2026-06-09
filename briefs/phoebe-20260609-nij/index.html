@@ -55,10 +55,10 @@
     .tags-card{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
     .tag-row{display:flex;align-items:flex-start;border-bottom:1px solid var(--border);}
     .tag-row:last-child{border-bottom:none;}
-    .tag-label{width:120px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
+    .tag-label{width:140px;min-width:140px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
     .tag-value{padding:14px 16px;font-size:13px;color:var(--charcoal);flex:1;line-height:1.8;}
     .hashtag{display:inline-block;background:var(--blush);color:var(--rose-deep);border-radius:6px;padding:2px 10px;margin:2px 3px;font-size:12px;font-weight:500;}
-    .copyable-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;position:relative;white-space:pre-line;}
+    .copyable-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;white-space:pre-line;}
     .copy-btn{position:absolute;top:8px;right:8px;background:var(--charcoal);color:white;border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
     .copy-btn:hover{background:var(--rose-deep);}
     .copy-btn.copied{background:#4CAF50;}
@@ -176,7 +176,7 @@
     <div class="tags-card">
       <div class="tag-row">
         <div class="tag-label">📝 キャプション<br>（必須）</div>
-        <div class="tag-value"><div class="copyable-block" id="caption-block">フィービーからいただきました<button class="copy-btn" onclick="copyText('caption-block',this)">コピー</button></div><p style="font-size:12px;color:var(--light);margin-top:8px;">📌 （同じ意味であれば言い換えOKです！） もしくはハッシュタグに#gifted　をおつけください🙇‍♀️</p></div>
+        <div class="tag-value"><div class="copyable-block" id="caption-block">フィービーからいただきました</div><button class="copy-hint" style="margin-top:6px;" onclick="copyCaption(this)">📋 コピー</button><p style="font-size:12px;color:var(--light);margin-top:8px;">📌 （同じ意味であれば言い換えOKです！） もしくはハッシュタグに#gifted　をおつけください🙇‍♀️</p></div>
       </div>
       <div class="tag-row">
         <div class="tag-label">＃ ハッシュタグ<br>（必須）</div>
@@ -208,40 +208,10 @@
         <button class="copy-hint" onclick="navigator.clipboard.writeText('https://item.rakuten.co.jp/phoebebeautyup/a-001-0000/');this.textContent='✓ コピー済'">📋 コピー</button>
       </div>
     </div>
-  
-    <div class="section">
-      <div class="section-title">
-        <div class="icon">✨</div>
-        過去の投稿例
-      </div>
-      <p style="font-size:13px;color:var(--mid);margin-bottom:14px">
-        投稿スタイルは自由です。あくまで参考例としてご覧ください！
-      </p>
-      
-      <div class="post-example">
-        <div class="platform-badge">🐦 X投稿</div>
-        <p class="desc">おるちゅばん様（@debusu_0717）</p>
-        <a href="商品の使用感をテキスト＋写真でわかりやすく紹介した投稿です。" target="_blank" class="post-example-link">投稿を見る →</a>
-      </div>
-
-      <div class="post-example">
-        <div class="platform-badge">📸 Instagramフィード</div>
-        <p class="desc">i8.ey_様</p>
-        <a href="ステキなセルフィーと一緒に商品を自然に紹介した投稿例です👏２枚目に商品でもOK！" target="_blank" class="post-example-link">投稿を見る →</a>
-      </div>
-
-      <div class="post-example">
-        <div class="platform-badge">🎬 Instagramリール</div>
-        <p class="desc">i8.ey_様</p>
-        <a href="「NIGHT ROUTINE」テーマでまつ毛美容液を日常ケアとして紹介したリール動画です。" target="_blank" class="post-example-link">投稿を見る →</a>
-      </div>
-
-      <div class="post-example">
-        <div class="platform-badge">🎬 Instagramリール</div>
-        <p class="desc">mmmshnn様</p>
-        <a href="商品開封・紹介のリール動画。シンプルな構成でも高インサイトを獲得した例です。" target="_blank" class="post-example-link">投稿を見る →</a>
-      </div>
-    </div>
+  <div class="section"><div class="section-title"><div class="icon">✨</div>過去の投稿例</div><p style="font-size:13px;color:var(--mid);margin-bottom:14px">投稿スタイルは自由です。あくまで参考例としてご覧ください！</p><div class="post-example"><div class="platform-badge">🐦 X投稿</div><p class="desc">おるちゅばん様（@debusu_0717） 商品の使用感をテキスト＋写真でわかりやすく紹介した投稿です。</p><a href="https://x.com/debusu_0717/status/2027539852280103182?s=20" target="_blank" class="post-example-link">投稿を見る →</a></div>
+<div class="post-example"><div class="platform-badge">📸 Instagramフィード</div><p class="desc">i8.ey_様 ステキなセルフィーと一緒に商品を自然に紹介した投稿例です👏２枚目に商品でもOK！</p><a href="https://www.instagram.com/p/DVV2i-Yk9nk/" target="_blank" class="post-example-link">投稿を見る →</a></div>
+<div class="post-example"><div class="platform-badge">🎬 Instagramリール</div><p class="desc">i8.ey_様 「NIGHT ROUTINE」テーマでまつ毛美容液を日常ケアとして紹介したリール動画です。</p><a href="https://www.instagram.com/reels/DVkah5yEpT-/" target="_blank" class="post-example-link">投稿を見る →</a></div>
+<div class="post-example"><div class="platform-badge">🎬 Instagramリール</div><p class="desc">mmmshnn様 商品開封・紹介のリール動画。シンプルな構成でも高インサイトを獲得した例です。</p><a href="https://www.instagram.com/reel/DVOW9C0EnrS/" target="_blank" class="post-example-link">投稿を見る →</a></div></div>
   <div class="section">
     <div class="section-title"><div class="icon">📎</div>今後の流れ</div>
     <div class="flow-steps">
