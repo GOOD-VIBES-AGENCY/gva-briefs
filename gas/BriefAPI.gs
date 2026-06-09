@@ -4,6 +4,8 @@
 // Code.gs と同じプロジェクトに追加してデプロイ
 // Script Properties: GITHUB_TOKEN, DELIVERY_GAS_ENDPOINT
 
+const DELIVERY_EP = 'https://script.google.com/macros/s/AKfycbzaQQ_hZFmw4GvzMcG9NMl3Cvvyklse--lOfGzTU6oGRRef17CKGa0x93ITqQGQevMQ6w/exec';
+
 const BRIEF_PAGES_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
 
 function doPost(e) {
@@ -26,7 +28,7 @@ function doGet(e) {
 
 // ── 新規作成 ──────────────────────────────────────────
 function handleCreate(r) {
-  const deliveryEp = PropertiesService.getScriptProperties().getProperty('DELIVERY_GAS_ENDPOINT') || '';
+  const deliveryEp = DELIVERY_EP;
   const gasEp      = ScriptApp.getService().getUrl();
   const slug       = r['slug'] || ('brief-' + Date.now());
   const pageUrl    = BRIEF_PAGES_BASE + '/briefs/' + slug + '/';
@@ -163,7 +165,7 @@ function patchIndexCard_(r, slug) {
 // ── 配送フォーム HTML 生成 ─────────────────────────────
 function buildDeliveryHtml_(r, gasEndpoint) {
   const campaign = esc(r['ページタイトル'] || '');
-  const ep = gasEndpoint || 'YOUR_DELIVERY_GAS_ENDPOINT';
+  const ep = gasEndpoint || 'https://script.google.com/macros/s/AKfycbzaQQ_hZFmw4GvzMcG9NMl3Cvvyklse--lOfGzTU6oGRRef17CKGa0x93ITqQGQevMQ6w/exec';
 
   return '<!DOCTYPE html>\n' +
 '<html lang="ja">\n' +
@@ -255,7 +257,7 @@ function buildDeliveryHtml_(r, gasEndpoint) {
 'const EP="' + ep.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '";\n' +
 'document.getElementById("zip").addEventListener("input",function(){let v=this.value.replace(/[^0-9]/g,"");if(v.length>3)v=v.slice(0,3)+"-"+v.slice(3,7);this.value=v;});\n' +
 'async function lz(){const z=document.getElementById("zip").value.replace(/[^0-9]/g,"");if(z.length!==7){alert("郵便番号を7桁で入力してください");return;}try{const r=await fetch("https://zipcloud.ibsnet.co.jp/api/search?zipcode="+z);const d=await r.json();if(d.results){const x=d.results[0];const p=document.getElementById("pref");for(let i=0;i<p.options.length;i++){if(p.options[i].text===x.address1){p.selectedIndex=i;break;}}document.getElementById("a1").value=x.address2+x.address3;}else{alert("住所が見つかりませんでした。");}}catch(e){alert("住所の取得に失敗しました。");}}\n' +
-'document.getElementById("df").addEventListener("submit",async function(e){e.preventDefault();const sb=document.getElementById("sb");const st=document.getElementById("st");const sp=document.getElementById("sp");sb.disabled=true;st.style.display="none";sp.style.display="block";document.getElementById("em").style.display="none";try{if(EP&&EP!=="YOUR_DELIVERY_GAS_ENDPOINT"){await fetch(EP,{method:"POST",mode:"no-cors",body:new URLSearchParams(new FormData(this))});}else{await new Promise(r=>setTimeout(r,800));}this.style.display="none";document.querySelector(".notice-card").style.display="none";document.getElementById("rc").style.display="block";}catch(err){sb.disabled=false;st.style.display="block";sp.style.display="none";document.getElementById("em").style.display="block";}});\n' +
+'document.getElementById("df").addEventListener("submit",async function(e){e.preventDefault();const sb=document.getElementById("sb");const st=document.getElementById("st");const sp=document.getElementById("sp");sb.disabled=true;st.style.display="none";sp.style.display="block";document.getElementById("em").style.display="none";try{if(EP&&EP!=="https://script.google.com/macros/s/AKfycbzaQQ_hZFmw4GvzMcG9NMl3Cvvyklse--lOfGzTU6oGRRef17CKGa0x93ITqQGQevMQ6w/exec"){await fetch(EP,{method:"POST",mode:"no-cors",body:new URLSearchParams(new FormData(this))});}else{await new Promise(r=>setTimeout(r,800));}this.style.display="none";document.querySelector(".notice-card").style.display="none";document.getElementById("rc").style.display="block";}catch(err){sb.disabled=false;st.style.display="block";sp.style.display="none";document.getElementById("em").style.display="block";}});\n' +
 '<\/script>\n' +
 '</body>\n' +
 '</html>';
