@@ -149,7 +149,7 @@
       </div>
     </div>
     <!-- BRIEFS_LIST -->
-      <div class="empty-state" id="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>
+      <div class="empty-state" id="empty-state" style="display:none">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>
     </div>
   </div>
 </div>
@@ -764,7 +764,7 @@ async function deleteCard(slug, title) {
     // カードが全部なくなったら空メッセージを表示
     const grid = document.getElementById('brief-grid');
     if (grid && !grid.querySelector('.brief-card')) {
-      grid.innerHTML = '<div class="empty-state" id="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>';
+      grid.innerHTML = '<div class="empty-state" id="empty-state" style="display:none">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>';
     }
   } catch(e) {
     alert('削除に失敗しました。しばらく後に再試行してください。');
@@ -823,9 +823,9 @@ if (!localStorage.getItem(LS_GAS)) {
 const EDIT_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
 
 function injectCardButtons() {
-  const cards = document.querySelectorAll('.brief-card[data-slug]');
+  const cards = document.querySelectorAll('.brief-card');
   const es = document.getElementById('empty-state');
-  if (es) es.style.display = cards.length > 0 ? 'none' : '';
+  if (es) es.style.display = cards.length > 0 ? 'none' : 'block';
   cards.forEach(function(card) {
     if (card.querySelector('.card-footer')) return;
     const slug  = card.dataset.slug;
