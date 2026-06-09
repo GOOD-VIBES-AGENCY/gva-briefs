@@ -702,7 +702,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
 <script>
 function copyHashtags(btn){
-  var tags=document.querySelectorAll('#hashtag-wrap .hashtag');
+  var tags=document.querySelectorAll('.hashtag');
   var text=Array.from(tags).map(function(t){return t.textContent;}).join(' ');
   navigator.clipboard.writeText(text).then(function(){
     btn.textContent='✓ コピー完了';btn.classList.add('copied');
