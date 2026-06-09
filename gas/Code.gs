@@ -244,34 +244,22 @@ function buildXLinkHtml(link) {
 
 function buildPostExamplesHtml(raw) {
   if (!raw.trim()) return '';
-  // 形式: "プラットフォーム|説明|URL"（改行区切り）
   const items = raw.split('\n').filter(s => s.trim());
   if (items.length === 0) return '';
-
   const exHtml = items.map(line => {
     const parts = line.split(/[|｜]/);
     const platform = parts[0] ? parts[0].trim().replace(/^#+\s*/, '').trim() : '';
-    const desc     = parts[1] ? parts[1].trim() : '';
-    const url      = parts[2] ? parts[2].trim() : '';
-    return `
-      <div class="post-example">
-        <div class="platform-badge">${esc(platform)}</div>
-        <p class="desc">${esc(desc)}</p>
-        ${url ? '<a href="' + url.replace(/"/g,'%22') + '" target="_blank" class="post-example-link">投稿を見る →</a>' : ''}
-      </div>`;
+    const url  = (parts.find(p => p.trim().startsWith('http')) || '').trim();
+    const desc = parts.slice(1).filter(p => !p.trim().startsWith('http')).join(' ').trim();
+    return '<div class="post-example">' +
+      '<div class="platform-badge">' + esc(platform) + '</div>' +
+      '<p class="desc">' + esc(desc) + '</p>' +
+      (url ? '<a href="' + url.replace(/"/g,'%22') + '" target="_blank" class="post-example-link">投稿を見る \u2192</a>' : '') +
+      '</div>';
   }).join('\n');
-
-  return `
-    <div class="section">
-      <div class="section-title">
-        <div class="icon">✨</div>
-        過去の投稿例
-      </div>
-      <p style="font-size:13px;color:var(--mid);margin-bottom:14px">
-        投稿スタイルは自由です。あくまで参考例としてご覧ください！
-      </p>
-      ${exHtml}
-    </div>`;
+  return '<div class="section"><div class="section-title"><div class="icon">\u2728</div>\u904e\u53bb\u306e\u6295\u7a3f\u4f8b</div>' +
+    '<p style="font-size:13px;color:var(--mid);margin-bottom:14px">\u6295\u7a3f\u30b9\u30bf\u30a4\u30eb\u306f\u81ea\u7531\u3067\u3059\u3002\u3042\u304f\u307e\u3067\u53c2\u8003\u4f8b\u3068\u3057\u3066\u3054\u89a7\u304f\u3060\u3055\u3044\uff01</p>' +
+    exHtml + '</div>';
 }
 
 function buildContactHtml(raw) {
@@ -497,10 +485,10 @@ const TEMPLATE = `<!DOCTYPE html>
     .tags-card{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
     .tag-row{display:flex;align-items:flex-start;border-bottom:1px solid var(--border);}
     .tag-row:last-child{border-bottom:none;}
-    .tag-label{width:120px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
+    .tag-label{width:140px;min-width:140px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
     .tag-value{padding:14px 16px;font-size:13px;color:var(--charcoal);flex:1;line-height:1.8;}
     .hashtag{display:inline-block;background:var(--blush);color:var(--rose-deep);border-radius:6px;padding:2px 10px;margin:2px 3px;font-size:12px;font-weight:500;}
-    .copyable-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;position:relative;white-space:pre-line;}
+    .copyable-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;white-space:pre-line;}
     .copy-btn{position:absolute;top:8px;right:8px;background:var(--charcoal);color:white;border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
     .copy-btn:hover{background:var(--rose-deep);}
     .copy-btn.copied{background:#4CAF50;}
@@ -582,7 +570,7 @@ const TEMPLATE = `<!DOCTYPE html>
     <div class="tags-card">
       <div class="tag-row">
         <div class="tag-label">📝 キャプション<br>（必須）</div>
-        <div class="tag-value"><div class="copyable-block" id="caption-block">{{REQUIRED_CAPTION}}<button class="copy-btn" onclick="copyText('caption-block',this)">コピー</button></div>{{CAPTION_NOTE}}</div>
+        <div class="tag-value"><div class="copyable-block" id="caption-block">{{REQUIRED_CAPTION}}</div><button class="copy-hint" style="margin-top:6px;" onclick="copyCaption(this)">📋 コピー</button>{{CAPTION_NOTE}}</div>
       </div>
       <div class="tag-row">
         <div class="tag-label">＃ ハッシュタグ<br>（必須）</div>
