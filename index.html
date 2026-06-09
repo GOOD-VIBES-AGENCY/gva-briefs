@@ -694,7 +694,6 @@ function showApp() {
 }
 // PIN入力
 
-);
 
 
 
@@ -732,11 +731,7 @@ document.getElementById('preview-close').addEventListener('click', () => {
 
 // ── 削除 ──
 async function deleteCard(slug, title) {
-  if (!confirm('この案件を削除しますか？
-
-「' + title + '」
-
-※ 依頼ページ・配送フォームも削除されます。元に戻せません。')) return;
+if (!confirm('この案件を削除しますか？  「' + title + '」  ※ 依頼ページ・配送フォームも削除されます。元に戻せません。')) return;
   const gasEp = localStorage.getItem(LS_GAS);
   if (!gasEp) { alert('GAS URLが設定されていません'); return; }
   const btn = document.querySelector(`[data-slug="${slug}"] .card-delete-btn`);
