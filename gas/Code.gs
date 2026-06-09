@@ -422,7 +422,7 @@ function buildIndexHtml(firstCard) {
     ${firstCard}
     <!-- BRIEFS_LIST -->
   
-<div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
+<div class="footer"><div class="footer-inner"><div class="footer-brand"><div class="footer-logo">GOOD VIBES AGENCY</div><div class="footer-tagline">Influencer Marketing &amp; Talent Management</div></div><div class="footer-note">本ページのURLは<br>依頼タレント様のみへの共有としてください</div></div></div>
 </div>
 </body>
 </html>`;
@@ -515,7 +515,7 @@ const TEMPLATE = `<!DOCTYPE html>
     .contact-item{background:white;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;text-decoration:none;transition:all 0.2s;}
     .contact-item .platform{font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.05em;}
     .contact-item .handle{font-size:13px;font-weight:600;color:var(--rose-deep);}
-    .footer{text-align:center;padding:32px 16px;color:var(--light);font-size:12px;border-top:1px solid var(--border);margin-top:40px;}
+    .footer{background:#1A1A1A;padding:48px 24px;margin-top:60px;}.footer-inner{max-width:720px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;}.footer-brand{display:flex;flex-direction:column;gap:6px;}.footer-logo{font-size:14px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#fff;}.footer-tagline{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.06em;}.footer-note{font-size:11px;color:rgba(255,255,255,0.25);text-align:right;line-height:1.6;}
 
     
     @media(max-width:480px){.contact-grid{grid-template-columns:1fr;}.summary-table td:first-child{width:90px;}.tag-label{width:100px;min-width:100px;}}
