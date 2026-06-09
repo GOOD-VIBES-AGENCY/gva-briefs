@@ -961,11 +961,14 @@ async function openEditModal(slug) {
   body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--light);">読み込み中...</div>';
   try {
     const res  = await fetch(EDIT_BASE + '/briefs/' + slug + '/data.json?t=' + Date.now());
-    const data = await res.json();
-    const gasEp = data.gasEndpoint || localStorage.getItem(LS_GAS) || '';
+    const gasEp = localStorage.getItem(LS_GAS) || '';
+    let _fields = {};
+    if (res.ok) { try { const _d = await res.json(); _fields = _d.fields || {}; } catch(e2) {} }
+    const data = { fields: _fields };
     overlay.dataset.slug = slug;
     overlay.dataset.gas  = gasEp;
-    body.innerHTML = buildEditForm(slug, data.fields || {}, gasEp);
+    body.innerHTML = buildEditForm(slug, _fields, gasEp);
+    if (!res.ok) { body.insertAdjacentHTML('afterbegin', '<div style="padding:10px;background:#FFF8E1;border-radius:6px;font-size:12px;margin-bottom:14px;color:#E65100;">⚠️ 保存データが見つかりません。フィールドを直接入力して保存してください。</div>'); }
     document.getElementById('edit-save-btn').onclick = function() { submitEdit(slug, gasEp); };
   } catch(e) {
     body.innerHTML = '<div style="padding:20px;color:#C62828;">読み込みに失敗しました: ' + e.message + '</div>';
