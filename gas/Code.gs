@@ -483,9 +483,9 @@ const TEMPLATE = `<!DOCTYPE html>
     .ng-list li:last-child{border-bottom:none;padding-bottom:0;}
     .ng-list li::before{content:'🚫';flex-shrink:0;}
     .tags-card{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
-    .tag-row{display:flex;align-items:flex-start;border-bottom:1px solid var(--border);}
+    .tag-row{display:flex;align-items:stretch;border-bottom:1px solid var(--border);}
     .tag-row:last-child{border-bottom:none;}
-    .tag-label{width:140px;min-width:140px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
+    .tag-label{width:130px;min-width:130px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
     .tag-value{padding:14px 16px;font-size:13px;color:var(--charcoal);flex:1;line-height:1.8;}
     .hashtag{display:inline-block;background:var(--blush);color:var(--rose-deep);border-radius:6px;padding:2px 10px;margin:2px 3px;font-size:12px;font-weight:500;}
     .copyable-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;white-space:pre-line;}
@@ -516,7 +516,7 @@ const TEMPLATE = `<!DOCTYPE html>
     .footer{text-align:center;padding:32px 16px;color:var(--light);font-size:12px;border-top:1px solid var(--border);margin-top:40px;}
 
     
-    @media(max-width:480px){.contact-grid{grid-template-columns:1fr;}.summary-table td:first-child{width:100px;}.tag-label{width:100px;}}
+    @media(max-width:480px){.contact-grid{grid-template-columns:1fr;}.summary-table td:first-child{width:90px;}.tag-label{width:100px;min-width:100px;}}
   </style>
 </head>
 <body>
@@ -569,11 +569,11 @@ const TEMPLATE = `<!DOCTYPE html>
     <div class="section-title"><div class="icon">🏷️</div>必要なキャプション・タグ</div>
     <div class="tags-card">
       <div class="tag-row">
-        <div class="tag-label">📝 キャプション<br>（必須）</div>
+        <div class="tag-label">📝 キャプション</div>
         <div class="tag-value"><div class="copyable-block" id="caption-block">{{REQUIRED_CAPTION}}</div><button class="copy-hint" style="margin-top:6px;" onclick="copyCaption(this)">📋 コピー</button>{{CAPTION_NOTE}}</div>
       </div>
       <div class="tag-row">
-        <div class="tag-label">＃ ハッシュタグ<br>（必須）</div>
+        <div class="tag-label">＃ ハッシュタグ</div>
         <div class="tag-value">
               {{HASHTAGS_HTML}}
               <button class="copy-hint" onclick="copyHashtags(this)">📋 コピー</button>
@@ -581,7 +581,7 @@ const TEMPLATE = `<!DOCTYPE html>
             </div>
       </div>
       <div class="tag-row">
-        <div class="tag-label">📱 アカウント<br>タグ付け（必須）</div>
+        <div class="tag-label">📱 アカウントタグ</div>
         <div class="tag-value">{{ACCOUNT_TAGS_HTML}}</div>
       </div>
     </div>
