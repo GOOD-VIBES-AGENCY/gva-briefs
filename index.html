@@ -113,10 +113,10 @@
   <div class="app-header">
     <div class="app-header-inner">
       <div>
-        <div class="app-logo">GOOD VIBES AGENCY</div>
+        <div class="app-logo" data-v="1780999083">GOOD VIBES AGENCY</div>
         <div class="app-title">案件管理</div>
       </div>
-      <button class="header-btn primary" id="new-btn">＋ 新規作成</button>
+      <button class="header-btn primary" id="new-btn" onclick="openModal()">＋ 新規作成</button>
           </div>
   </div>
   <div class="main">
@@ -690,7 +690,7 @@ function showApp() {
   document.getElementById('app').classList.add('visible');
   const saved = localStorage.getItem(LS_GAS);
   if (saved && document.getElementById('gas-url-input')) document.getElementById('gas-url-input').value = saved;
-  setTimeout(injectCardButtons, 50);
+  setTimeout(injectCardButtons, 200); setTimeout(injectCardButtons, 1000);
 }
 // PIN入力
 
@@ -956,6 +956,7 @@ async function submitEdit(slug, gasEp) {
 
 // ── 起動 ──
 showApp();
+window.addEventListener("load", function() { setTimeout(injectCardButtons, 500); });
 
 
 </script>
