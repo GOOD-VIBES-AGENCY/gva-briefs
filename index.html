@@ -3,31 +3,802 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GVA タイアップ依頼ページ一覧</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <title>案件管理 | GOOD VIBES AGENCY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+    :root{--bg:#F5F5F5;--white:#FFF;--accent:#1A1A1A;--border:#E0E0E0;--mid:#555;--light:#999;--section-bg:#FAFAFA;}
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{background:#FDFAF6;font-family:"Noto Sans JP",sans-serif;padding:40px 16px;min-height:100vh;}
-    .header{max-width:720px;margin:0 auto 32px;}
-    .header h1{font-size:22px;font-weight:700;color:#2D2D2D;margin-bottom:6px;}
-    .header p{font-size:13px;color:#9E9896;}
-    .grid{max-width:720px;margin:0 auto;display:grid;gap:12px;}
-    .brief-card{background:white;border:1px solid #E8DDD8;border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;}
-    .brief-meta{font-size:11px;color:#9E9896;letter-spacing:0.05em;}
-    .brief-title{font-size:15px;font-weight:700;color:#2D2D2D;}
-    .brief-link{display:inline-flex;align-items:center;gap:5px;background:#F2E8E1;color:#B85C52;font-size:12px;font-weight:600;padding:6px 14px;border-radius:7px;text-decoration:none;width:fit-content;transition:all 0.2s;}
-    .brief-link:hover{background:#e0cec8;}
-    .empty{text-align:center;padding:60px 20px;color:#9E9896;font-size:14px;}
+    body{background:var(--bg);font-family:"Noto Sans JP",sans-serif;font-size:14px;color:var(--accent);line-height:1.7;}
+
+    /* ── PIN ── */
+    #pin-screen{position:fixed;inset:0;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:32px;z-index:9999;}
+    #pin-screen.hidden{display:none;}
+    .pin-logo{color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;}
+    .pin-title{color:#fff;font-size:20px;font-weight:700;}
+    .pin-boxes{display:flex;gap:12px;}
+    .pin-box{width:52px;height:60px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:28px;font-weight:700;color:#fff;text-align:center;cursor:pointer;caret-color:transparent;}
+    .pin-box:focus{outline:none;border-color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.12);}
+    .pin-error{color:#FF6B6B;font-size:12px;height:18px;text-align:center;}
+
+    /* ── App ── */
+    #app{display:none;}
+    #app.visible{display:block;}
+    .app-header{background:var(--accent);padding:0;}
+    .app-header-inner{max-width:860px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:12px;}
+    .app-logo{color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;}
+    .app-title{color:#fff;font-size:16px;font-weight:700;flex:1;}
+    .header-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:rgba(255,255,255,0.7);font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+    .header-btn:hover{background:rgba(255,255,255,0.18);}
+    .header-btn.primary{background:#fff;color:var(--accent);border-color:#fff;}
+    .header-btn.primary:hover{opacity:0.9;}
+    .logout-btn{background:none;border:none;color:rgba(255,255,255,0.3);font-size:12px;cursor:pointer;font-family:inherit;padding:6px 8px;}
+    .logout-btn:hover{color:rgba(255,255,255,0.6);}
+
+    /* ── 設定パネル ── */
+    .settings-bar{background:var(--white);border-bottom:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height 0.25s ease;}
+    .settings-bar.open{max-height:120px;}
+    .settings-inner{max-width:860px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:12px;}
+    .settings-inner label{font-size:12px;font-weight:700;color:var(--mid);white-space:nowrap;}
+    .settings-inner input{flex:1;border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:12px;font-family:monospace;background:var(--section-bg);}
+    .settings-inner input:focus{outline:none;border-color:var(--accent);}
+    .settings-save{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+
+    /* ── 案件一覧 ── */
+    .main{max-width:860px;margin:0 auto;padding:28px 20px 80px;}
+    .list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+    .list-header h2{font-size:15px;font-weight:700;color:var(--mid);}
+    .brief-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+    .brief-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;transition:box-shadow 0.15s;}
+    .brief-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.08);}
+    .brief-meta{font-size:11px;color:var(--light);letter-spacing:0.02em;}
+    .brief-title{font-size:14px;font-weight:700;color:var(--accent);line-height:1.5;}
+    .brief-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .brief-link{display:inline-flex;align-items:center;gap:4px;background:var(--section-bg);border:1px solid var(--border);color:var(--accent);font-size:11px;font-weight:600;padding:5px 12px;border-radius:5px;text-decoration:none;transition:all 0.15s;}
+    .brief-link:hover{background:var(--border);}
+    .brief-link.delivery{color:var(--mid);}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--light);font-size:14px;grid-column:1/-1;}
+
+    /* ── モーダル ── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;overflow-y:auto;padding:20px;}
+    .modal-overlay.open{display:block;}
+    .modal{background:var(--white);border-radius:12px;max-width:760px;margin:0 auto;overflow:hidden;}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:1;}
+    .modal-head h2{font-size:16px;font-weight:700;}
+    .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--light);line-height:1;padding:4px 8px;}
+    .modal-body{padding:28px 24px;}
+    .m-section{font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.08em;text-transform:uppercase;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+    .m-section:first-child{margin-top:0;}
+    .mf{margin-bottom:14px;}
+    .mf label{display:block;font-size:12px;font-weight:700;color:var(--mid);margin-bottom:5px;}
+    .mf label .req{color:#E53935;margin-left:3px;}
+    .mf label .opt{color:var(--light);font-weight:400;font-size:11px;margin-left:4px;}
+    .mf input,.mf textarea{width:100%;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:13px;font-family:"Noto Sans JP",sans-serif;background:var(--white);resize:vertical;transition:border-color 0.15s;}
+    .mf input:focus,.mf textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(26,26,26,0.07);}
+    .mf textarea{min-height:76px;}
+    .mf textarea.t{min-height:110px;}
+    .mf .hint{font-size:11px;color:var(--light);margin-top:4px;}
+    .m-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .faq-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;}
+    .faq-block-num{font-size:11px;font-weight:700;color:var(--light);margin-bottom:10px;letter-spacing:0.08em;text-transform:uppercase;}
+    .modal-footer{display:flex;gap:10px;padding:20px 24px;border-top:1px solid var(--border);background:var(--white);position:sticky;bottom:0;z-index:1;}
+    .preview-btn{flex:1;background:var(--white);color:var(--accent);border:1px solid var(--border);border-radius:8px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+    .preview-btn:hover{background:var(--section-bg);border-color:var(--accent);}
+    .submit-btn{flex:2;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s;}
+    .submit-btn:hover{opacity:0.85;}
+    .submit-btn:disabled{opacity:0.4;cursor:not-allowed;}
+    .modal-spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:none;margin:0 auto;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .result-box{background:var(--section-bg);border-radius:8px;padding:20px;margin-top:16px;text-align:center;}
+    .result-box h3{font-size:16px;font-weight:700;margin-bottom:12px;color:#2E7D32;}
+    .result-box .url-row{text-align:left;margin-bottom:8px;}
+    .result-box .url-label{font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:3px;}
+    .result-box .url-val{background:var(--white);border:1px solid var(--border);border-radius:5px;padding:8px 12px;font-size:12px;word-break:break-all;}
+    .result-box .url-val a{color:var(--accent);font-weight:600;}
+    .error-box{background:#FFF3F3;border:1px solid #FFCDD2;border-radius:8px;padding:16px;color:#C62828;font-size:13px;margin-top:12px;}
+
+    /* ── プレビューモーダル ── */
+    .preview-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:600;padding:20px;}
+    .preview-overlay.open{display:block;}
+    .preview-modal{background:var(--white);border-radius:10px;max-width:800px;margin:0 auto;overflow:hidden;height:calc(100vh - 40px);display:flex;flex-direction:column;}
+    .preview-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .preview-modal-head h3{font-size:13px;font-weight:700;color:var(--mid);}
+    .preview-frame{flex:1;border:none;width:100%;}
+
+    @media(max-width:600px){.m-2col{grid-template-columns:1fr;}.brief-grid{grid-template-columns:1fr;}.modal-body{padding:20px 16px;}.app-header-inner{flex-wrap:wrap;gap:8px;}}
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>📋 タイアップ依頼ページ一覧</h1>
-    <p>GOOD VIBES AGENCY — 自動生成されたタイアップ依頼ページ</p>
+
+<!-- ── PIN 画面 ── -->
+<div id="pin-screen">
+  <div class="pin-logo">GOOD VIBES AGENCY</div>
+  <div class="pin-title">PINを入力</div>
+  <div class="pin-boxes">
+    <input class="pin-box" id="p0" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="pin-box" id="p1" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="pin-box" id="p2" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+    <input class="pin-box" id="p3" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
   </div>
-  <div class="grid">
-    <!-- BRIEFS_LIST -->
-    <div class="empty">まだ依頼ページがありません。<br>フォームから案件を登録してください。</div>
+  <div class="pin-error" id="pin-error"></div>
+</div>
+
+<!-- ── アプリ本体 ── -->
+<div id="app">
+  <div class="app-header">
+    <div class="app-header-inner">
+      <div>
+        <div class="app-logo">GOOD VIBES AGENCY</div>
+        <div class="app-title">案件管理</div>
+      </div>
+      <button class="header-btn" id="settings-toggle">⚙️ 設定</button>
+      <button class="header-btn primary" id="new-btn">＋ 新規作成</button>
+      <button class="logout-btn" id="logout-btn">ログアウト</button>
+    </div>
   </div>
+
+  <div class="settings-bar" id="settings-bar">
+    <div class="settings-inner">
+      <label>GAS Web App URL</label>
+      <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/...">
+      <button class="settings-save" id="settings-save">保存</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="list-header">
+      <h2>案件一覧</h2>
+    </div>
+    <div class="brief-grid" id="brief-grid">
+      <!-- BRIEFS_LIST -->
+      <div class="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 新規作成モーダル ── -->
+<div class="modal-overlay" id="new-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>新規依頼ページ作成</h2>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="create-result"></div>
+      <form id="create-form">
+
+        <div class="m-section">基本情報</div>
+        <div class="mf"><label>ページタイトル <span class="req">*</span></label><input type="text" name="ページタイトル" required placeholder="例: ブランドA【商品カテゴリ】タイアップのご依頼（〇月度）"></div>
+        <div class="m-2col">
+          <div class="mf"><label>月度ラベル <span class="opt">任意</span></label><input type="text" name="月度ラベル" placeholder="例: 2026年6月度"></div>
+          <div class="mf"><label>ブランド名 <span class="req">*</span></label><input type="text" name="ブランド名" required placeholder="URLスラグに使用（英数字推奨）"></div>
+        </div>
+        <div class="mf"><label>商品公式サイトURL <span class="req">*</span></label><input type="url" name="商品公式サイトURL" required placeholder="https://..."></div>
+
+        <div class="m-section">案件概要</div>
+        <div class="mf"><label>お願いしたいこと（説明） <span class="req">*</span></label><textarea name="お願いしたいこと（説明）" class="t" required placeholder="商品をお試しいただき、Instagramへの投稿をお願いいたします🙇‍♀️"></textarea></div>
+        <div class="mf"><label>投稿期間（テキスト） <span class="req">*</span></label><textarea name="投稿期間（テキスト）" required placeholder="例: Instagram：6月1日（月）〜6月30日（火）"></textarea></div>
+        <div class="m-2col">
+          <div class="mf"><label>応募締切 <span class="req">*</span></label><input type="text" name="応募締切" required placeholder="例: 6月25日（木）17時まで"></div>
+          <div class="mf"><label>報酬（商品名・金額） <span class="req">*</span></label><input type="text" name="報酬（商品名・金額）" required placeholder="例: 商品無償提供（¥〇,〇〇〇相当）"></div>
+        </div>
+        <div class="mf"><label>投稿媒体 <span class="req">*</span></label><textarea name="投稿媒体" required placeholder="例: Instagram：フィード・リール&#10;X：1ポスト"></textarea></div>
+        <div class="mf"><label>投稿内容 <span class="req">*</span></label><textarea name="投稿内容" required placeholder="例: 商品の使用感・日常ケアシーン"></textarea></div>
+
+        <div class="m-section">商品情報</div>
+        <div class="mf"><label>商品説明テキスト <span class="req">*</span></label><textarea name="商品説明テキスト" class="t" required placeholder="商品の特徴・効果・成分などの説明文"></textarea></div>
+        <div class="mf"><label>こんな人にオススメ（改行区切り） <span class="opt">任意</span></label><textarea name="こんな人にオススメ（改行区切り）" placeholder="1行に1項目&#10;例: ○○が気になっている方"></textarea></div>
+        <div class="mf"><label>商品名（表記） <span class="req">*</span></label><textarea name="商品名（表記）" required placeholder="例: 商品の正式名称&#10;→略称・通称でもOK"></textarea></div>
+        <div class="m-2col">
+          <div class="mf"><label>容量・内容量 <span class="opt">任意</span></label><input type="text" name="容量・内容量" placeholder="例: ○○g / ○○mL"></div>
+          <div class="mf"><label>販売価格 <span class="opt">任意</span></label><input type="text" name="販売価格" placeholder="例: ○,○○○円（税込）"></div>
+        </div>
+        <div class="mf"><label>販売先 <span class="opt">任意</span></label><textarea name="販売先" placeholder="例: 公式サイト・楽天・Amazon・Yahoo!"></textarea></div>
+
+        <div class="m-section">よくある質問（最大5件）</div>
+        <div class="faq-block"><div class="faq-block-num">FAQ 1</div><div class="mf"><input type="text" name="FAQ質問1" placeholder="Q: 質問"></div><div class="mf" style="margin-bottom:0"><textarea name="FAQ回答1" placeholder="A: 回答"></textarea></div></div>
+        <div class="faq-block"><div class="faq-block-num">FAQ 2</div><div class="mf"><input type="text" name="FAQ質問2" placeholder="Q: 質問"></div><div class="mf" style="margin-bottom:0"><textarea name="FAQ回答2" placeholder="A: 回答"></textarea></div></div>
+        <div class="faq-block"><div class="faq-block-num">FAQ 3</div><div class="mf"><input type="text" name="FAQ質問3" placeholder="Q: 質問"></div><div class="mf" style="margin-bottom:0"><textarea name="FAQ回答3" placeholder="A: 回答"></textarea></div></div>
+        <div class="faq-block"><div class="faq-block-num">FAQ 4</div><div class="mf"><input type="text" name="FAQ質問4" placeholder="Q: 質問"></div><div class="mf" style="margin-bottom:0"><textarea name="FAQ回答4" placeholder="A: 回答"></textarea></div></div>
+        <div class="faq-block"><div class="faq-block-num">FAQ 5</div><div class="mf"><input type="text" name="FAQ質問5" placeholder="Q: 質問"></div><div class="mf" style="margin-bottom:0"><textarea name="FAQ回答5" placeholder="A: 回答"></textarea></div></div>
+
+        <div class="m-section">NG事項 &amp; 必須表現</div>
+        <div class="mf"><label>NG事項（改行区切り） <span class="req">*</span></label><textarea name="NG事項（改行区切り）" class="t" required placeholder="1行に1項目&#10;比較表現&#10;完璧表現など"></textarea></div>
+        <div class="mf"><label>必須キャプション <span class="req">*</span></label><textarea name="必須キャプション" required placeholder="例: ◯◯様よりご提供いただきました"></textarea></div>
+        <div class="mf"><label>必須ハッシュタグ（スペース区切り） <span class="req">*</span></label><input type="text" name="必須ハッシュタグ（スペース区切り）" required placeholder="例: #ブランド名 #商品カテゴリ #gifted"></div>
+        <div class="m-2col">
+          <div class="mf"><label>Instagramアカウントタグ <span class="opt">任意</span></label><input type="text" name="Instagramアカウントタグ" placeholder="例: @brand_account"></div>
+          <div class="mf"><label>TikTokアカウントタグ <span class="opt">任意</span></label><input type="text" name="TikTokアカウントタグ" placeholder="例: @brand_tiktok"></div>
+        </div>
+        <div class="m-2col">
+          <div class="mf"><label>Xアカウントタグ <span class="opt">任意</span></label><input type="text" name="Xアカウントタグ" placeholder="例: @brand_x"></div>
+          <div class="mf"><label>X投稿用リンク <span class="opt">任意</span></label><input type="text" name="X投稿用リンク（任意）" placeholder="https://..."></div>
+        </div>
+
+        <div class="m-section">参考例・フロー</div>
+        <div class="mf"><label>過去の投稿例（改行区切り） <span class="opt">任意</span></label><div class="hint">形式: プラットフォーム|説明|URL</div><textarea name="過去の投稿例（改行区切り）" class="t" placeholder="Instagram|説明|https://..."></textarea></div>
+        <div class="mf"><label>お問い合わせ先（改行区切り） <span class="req">*</span></label><div class="hint">形式: プラットフォーム|URL</div><textarea name="お問い合わせ先（改行区切り）" required placeholder="Instagram|https://www.instagram.com/gva_casting/"></textarea></div>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="preview-btn" id="preview-btn">👁 プレビュー</button>
+      <button class="submit-btn" id="submit-btn">
+        <span id="submit-text">🚀 生成・公開する</span>
+        <div class="modal-spinner" id="submit-spinner"></div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── プレビューモーダル ── -->
+<div class="preview-overlay" id="preview-overlay">
+  <div class="preview-modal">
+    <div class="preview-modal-head">
+      <h3>📄 プレビュー（確認用）</h3>
+      <button class="modal-close" id="preview-close">✕</button>
+    </div>
+    <iframe class="preview-frame" id="preview-frame"></iframe>
+  </div>
+</div>
+
+<script>
+const PAGES_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
+const PIN_CORRECT = '0331';
+const LS_PIN = 'gva_pin_ok';
+const LS_GAS = 'gva_gas_endpoint';
+
+
+// === スラグ生成 ===
+function generateSlug(brand) {
+  const now  = new Date();
+  const date = now.getFullYear()
+             + String(now.getMonth()+1).padStart(2,'0')
+             + String(now.getDate()).padStart(2,'0');
+  const rand = Math.random().toString(36).slice(2,5);
+  return (brand + '-' + date + '-' + rand)
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'brief-' + Date.now();
+}
+
+
+// === ヘルパー ===
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function escNl(str) { return esc(str).replace(/\n/g, '<br>'); }
+
+function generateSlug(brand) {
+  const now  = new Date();
+  const date = now.getFullYear()
+             + String(now.getMonth()+1).padStart(2,'0')
+             + String(now.getDate()).padStart(2,'0');
+  const rand = Math.random().toString(36).slice(2,5);
+  return (brand + '-' + date + '-' + rand)
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'brief-' + Date.now();
+}
+
+function buildRecommendHtml(raw) {
+  if (!raw.trim()) return '';
+  const items = raw.split('\n').filter(s => s.trim());
+  const liHtml = items.map(item => '<li>' + esc(item.replace(/^[・✔️\-\*]+\s*/, '')) + '</li>').join('\n');
+  return `<div class="recommend-list"><div class="label">こんな人にオススメ！</div><ul>${liHtml}</ul></div>`;
+}
+
+function buildFaqHtml(r) {
+  const faqs = [];
+  for (let i = 1; i <= 5; i++) {
+    const q = r['FAQ質問' + i] || '';
+    const a = r['FAQ回答' + i] || '';
+    if (q && a) faqs.push({q, a});
+  }
+  if (!faqs.length) return '';
+  const itemsHtml = faqs.map(f =>
+    `<div class="faq-item"><div class="faq-q">${esc(f.q)}</div><div class="faq-a">${escNl(f.a)}</div></div>`
+  ).join('\n');
+  return `<div class="section"><div class="section-title"><div class="icon">❓</div>よくある質問</div><div class="faq-list">${itemsHtml}</div></div>`;
+}
+
+function buildNgHtml(raw) {
+  if (!raw.trim()) return '<li>（なし）</li>';
+  return raw.split('\n').filter(s => s.trim())
+    .map(item => '<li>' + esc(item.replace(/^[・🚫\-\*]+\s*/, '')) + '</li>').join('\n');
+}
+
+function buildHashtagsHtml(raw) {
+  if (!raw.trim()) return '';
+  return raw.split(/[\s\n]+/).filter(s => s.trim())
+    .map(tag => { const t = tag.startsWith('#') ? tag : '#' + tag; return `<span class="hashtag">${esc(t)}</span>`; }).join(' ');
+}
+
+function buildAccountTagsHtml(r) {
+  const platforms = [
+    {key:'Instagramアカウントタグ', label:'Instagram'},
+    {key:'TikTokアカウントタグ',    label:'TikTok'},
+    {key:'Xアカウントタグ',         label:'X'}
+  ];
+  const result = platforms.filter(p => r[p.key])
+    .map(p => `<div><small style="color:var(--light);font-size:11px">${p.label}：</small><strong>${esc(r[p.key])}</strong></div>`).join('\n');
+  return result || '（未設定）';
+}
+
+function buildXLinkHtml(link) {
+  if (!link) return '';
+  return `<div class="section"><div class="section-title"><div class="icon">🔗</div>投稿設置リンク（Xの方のみ）</div><p style="font-size:13px;color:var(--mid);margin-bottom:12px">ツリー形式（リプ欄）にリンクを貼ってください🙇‍♀️</p><div class="link-block"><a href="${esc(link)}" target="_blank">${esc(link)}</a><button class="copy-hint" onclick="navigator.clipboard.writeText('${esc(link)}');this.textContent='✓ コピー済'">📋 コピー</button></div></div>`;
+}
+
+function buildPostExamplesHtml(raw) {
+  if (!raw.trim()) return '';
+  const items = raw.split('\n').filter(s => s.trim());
+  if (!items.length) return '';
+  const exHtml = items.map(line => {
+    const parts = line.split('|');
+    const platform = parts[0] ? parts[0].trim() : '';
+    const desc     = parts[1] ? parts[1].trim() : '';
+    const url      = parts[2] ? parts[2].trim() : '';
+    return `<div class="post-example"><div class="platform-badge">${esc(platform)}</div><p class="desc">${esc(desc)}</p>${url ? `<a href="${esc(url)}" target="_blank">👉 投稿を見る</a>` : ''}</div>`;
+  }).join('\n');
+  return `<div class="section"><div class="section-title"><div class="icon">✨</div>過去の投稿例</div><p style="font-size:13px;color:var(--mid);margin-bottom:14px">投稿スタイルは自由です。あくまで参考例としてご覧ください！</p>${exHtml}</div>`;
+}
+
+function buildContactHtml(raw) {
+  if (!raw.trim()) return '';
+  const platformIcons = {Instagram:'📸', X:'🐦', TikTok:'🎵', LINE:'💬'};
+  return raw.split('\n').filter(s => s.trim()).map(line => {
+    const parts    = line.split('|');
+    const platform = parts[0] ? parts[0].trim() : '';
+    const url      = parts[1] ? parts[1].trim() : '';
+    const icon     = platformIcons[platform] || '📨';
+    const href     = url.startsWith('http') ? url : '#';
+    return `<a class="contact-item" href="${esc(href)}" target="_blank"><span style="font-size:22px">${icon}</span><div><div class="platform">${esc(platform)}</div><div class="handle">${esc(url)}</div></div></a>`;
+  }).join('\n');
+}
+
+// === HTML生成 ===
+function buildBriefHtml(r) {
+  const TEMPLATE = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{PAGE_TITLE}} | GVA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root{--cream:#FDFAF6;--warm-white:#FAF7F2;--blush:#F2E8E1;--rose:#D4837A;--rose-deep:#B85C52;--gold:#C9A96E;--charcoal:#2D2D2D;--mid:#6B6260;--light:#9E9896;--border:#E8DDD8;--section-bg:#FBF8F5;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--cream);color:var(--charcoal);font-family:'Noto Sans JP',sans-serif;font-size:14px;line-height:1.8;}
+    .header{background:linear-gradient(135deg,#2D2D2D 0%,#1a1a1a 100%);padding:0;position:relative;overflow:hidden;}
+    .header::before{content:'';position:absolute;top:-50%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(212,131,122,0.15) 0%,transparent 70%);pointer-events:none;}
+    .header-inner{max-width:720px;margin:0 auto;padding:48px 24px 40px;position:relative;}
+    .gva-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:4px 14px;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:20px;}
+    .gva-badge::before{content:'';width:6px;height:6px;background:var(--rose);border-radius:50%;}
+    .header h1{font-size:clamp(20px,5vw,28px);font-weight:700;color:#fff;line-height:1.5;letter-spacing:0.02em;margin-bottom:8px;}
+    .header-sub{color:rgba(255,255,255,0.45);font-size:12px;letter-spacing:0.08em;}
+    .container{max-width:720px;margin:0 auto;padding:0 16px 80px;}
+    .intro-card{background:white;border-radius:16px;padding:28px;margin:24px 0;border:1px solid var(--border);box-shadow:0 2px 16px rgba(0,0,0,0.04);}
+    .intro-card p{color:var(--mid);font-size:14px;line-height:1.9;margin-bottom:16px;}
+    .intro-card p:last-child{margin-bottom:0;}
+    .product-link{display:inline-flex;align-items:center;gap:8px;background:var(--blush);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--rose-deep);text-decoration:none;font-weight:500;word-break:break-all;}
+    .product-link::before{content:'🔗';font-size:14px;}
+    .section{margin:20px 0;}
+    .section-title{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:var(--charcoal);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--border);}
+    .section-title .icon{width:32px;height:32px;background:var(--blush);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .summary-table{width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:white;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
+    .summary-table tr:not(:last-child) td{border-bottom:1px solid var(--border);}
+    .summary-table td{padding:14px 18px;font-size:13px;vertical-align:top;}
+    .summary-table td:first-child{width:120px;background:var(--section-bg);font-weight:600;color:var(--mid);font-size:12px;letter-spacing:0.02em;white-space:nowrap;}
+    .highlight-cell{color:var(--rose-deep)!important;font-weight:600!important;}
+    .reward-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#F2E8E1,#EDD9D0);border:1px solid #D4A59A;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--rose-deep);}
+    .product-card{background:white;border-radius:16px;padding:24px;border:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,0.04);}
+    .product-desc{color:var(--mid);font-size:13px;line-height:1.9;margin-bottom:20px;white-space:pre-line;}
+    .recommend-list{background:var(--section-bg);border-radius:10px;padding:16px 20px;margin-bottom:20px;}
+    .recommend-list .label{font-size:12px;font-weight:700;color:var(--rose-deep);letter-spacing:0.05em;margin-bottom:10px;}
+    .recommend-list li{list-style:none;font-size:13px;color:var(--charcoal);padding:4px 0;display:flex;align-items:flex-start;gap:8px;}
+    .recommend-list li::before{content:'✔️';flex-shrink:0;margin-top:1px;}
+    .specs-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .specs-table tr:not(:last-child) td{border-bottom:1px solid var(--border);}
+    .specs-table td{padding:12px 16px;font-size:13px;}
+    .specs-table td:first-child{width:110px;background:var(--section-bg);font-weight:600;color:var(--mid);font-size:12px;}
+    .faq-list{display:flex;flex-direction:column;gap:10px;}
+    .faq-item{background:white;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .faq-q{padding:14px 18px;font-size:13px;font-weight:600;color:var(--charcoal);background:var(--section-bg);display:flex;align-items:flex-start;gap:8px;}
+    .faq-q::before{content:'Q';background:var(--rose);color:white;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .faq-a{padding:14px 18px;font-size:13px;color:var(--mid);line-height:1.8;display:flex;align-items:flex-start;gap:8px;}
+    .faq-a::before{content:'A';background:var(--charcoal);color:white;font-size:11px;font-weight:700;width:20px;height:20px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+    .ng-list{background:#FFF5F5;border:1px solid #F5C0BC;border-radius:12px;padding:20px;}
+    .ng-list li{list-style:none;font-size:13px;color:#8B3B38;padding:5px 0;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid #F5D5D3;}
+    .ng-list li:last-child{border-bottom:none;padding-bottom:0;}
+    .ng-list li::before{content:'🚫';flex-shrink:0;}
+    .tags-card{background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
+    .tag-row{display:flex;align-items:flex-start;border-bottom:1px solid var(--border);}
+    .tag-row:last-child{border-bottom:none;}
+    .tag-label{width:120px;flex-shrink:0;padding:14px 16px;font-size:12px;font-weight:600;color:var(--mid);background:var(--section-bg);border-right:1px solid var(--border);}
+    .tag-value{padding:14px 16px;font-size:13px;color:var(--charcoal);flex:1;line-height:1.8;}
+    .hashtag{display:inline-block;background:var(--blush);color:var(--rose-deep);border-radius:6px;padding:2px 10px;margin:2px 3px;font-size:12px;font-weight:500;}
+    .copyable-block{background:var(--section-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.8;position:relative;white-space:pre-line;}
+    .copy-btn{position:absolute;top:8px;right:8px;background:var(--charcoal);color:white;border:none;border-radius:6px;padding:4px 12px;font-size:11px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+    .copy-btn:hover{background:var(--rose-deep);}
+    .copy-btn.copied{background:#4CAF50;}
+    .copy-hint{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--light);cursor:pointer;background:var(--blush);border:none;border-radius:6px;padding:3px 10px;margin-left:6px;transition:all 0.2s;font-family:inherit;}
+    .link-block{background:white;border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .link-block a{color:var(--rose-deep);font-size:13px;word-break:break-all;text-decoration:none;font-weight:500;}
+    .post-example{background:white;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:10px;}
+    .post-example .platform-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--mid);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:6px;}
+    .post-example .desc{font-size:13px;color:var(--mid);margin-bottom:10px;line-height:1.7;}
+    .post-example a{display:inline-flex;align-items:center;gap:5px;background:var(--section-bg);border:1px solid var(--border);color:var(--rose-deep);font-size:12px;padding:6px 14px;border-radius:7px;text-decoration:none;transition:all 0.2s;}
+    .flow-steps{display:flex;flex-direction:column;gap:0;}
+    .flow-step{display:flex;align-items:flex-start;gap:16px;position:relative;padding-bottom:24px;}
+    .flow-step:last-child{padding-bottom:0;}
+    .flow-step::after{content:'';position:absolute;left:15px;top:32px;width:2px;height:calc(100% - 12px);background:var(--border);}
+    .flow-step:last-child::after{display:none;}
+    .step-num{width:32px;height:32px;background:var(--charcoal);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;position:relative;z-index:1;}
+    .step-content{padding-top:5px;flex:1;}
+    .step-content strong{font-size:14px;display:block;margin-bottom:4px;color:var(--charcoal);}
+    .step-content p{font-size:13px;color:var(--mid);line-height:1.7;}
+    .form-btn{display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:white;text-decoration:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;margin-top:12px;transition:all 0.2s;box-shadow:0 4px 15px rgba(212,131,122,0.4);}
+    .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .contact-item{background:white;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:10px;text-decoration:none;transition:all 0.2s;}
+    .contact-item .platform{font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.05em;}
+    .contact-item .handle{font-size:13px;font-weight:600;color:var(--rose-deep);}
+    .footer{text-align:center;padding:32px 16px;color:var(--light);font-size:12px;border-top:1px solid var(--border);margin-top:40px;}
+    @media(max-width:480px){.contact-grid{grid-template-columns:1fr;}.summary-table td:first-child{width:100px;}.tag-label{width:100px;}}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="gva-badge">GOOD VIBES AGENCY</div>
+    <h1>{{PAGE_TITLE}}</h1>
+    <p class="header-sub">{{MONTH_LABEL}}</p>
+  </div>
+</div>
+<div class="container">
+  <div class="intro-card">
+    <p>ご依頼を検討くださり、ありがとうございます✨<br>下記の内容をご確認のうえ、お受けいただける場合は<strong>DMへ「OK！🙆‍♀️」</strong>のご返信の上、フォームより配送先のご入力をお願いいたします。</p>
+    <p>▼ 商品公式サイト</p>
+    <a href="{{PRODUCT_URL}}" class="product-link" target="_blank">{{PRODUCT_URL}}</a>
+  </div>
+  <div class="section">
+    <div class="section-title"><div class="icon">📱</div>お願いしたいこと</div>
+    <div class="product-card"><p class="product-desc">{{REQUEST_DESCRIPTION}}</p></div>
+  </div>
+  <div class="section">
+    <div class="section-title"><div class="icon">📋</div>案件概要</div>
+    <table class="summary-table">
+      <tr><td>📅 投稿期間</td><td>{{POSTING_PERIOD}}</td></tr>
+      <tr><td>⏰ 応募締切</td><td class="highlight-cell">{{DEADLINE}}</td></tr>
+      <tr><td>📱 投稿媒体</td><td>{{PLATFORMS}}</td></tr>
+      <tr><td>📎 投稿内容</td><td>{{POST_CONTENT}}</td></tr>
+      <tr><td>🎁 報酬</td><td><span class="reward-badge">{{REWARD}}</span></td></tr>
+    </table>
+  </div>
+  <div class="section">
+    <div class="section-title"><div class="icon">👀</div>商品情報</div>
+    <div class="product-card">
+      <p class="product-desc">{{PRODUCT_DESCRIPTION}}</p>
+      {{RECOMMEND_HTML}}
+      <table class="specs-table">
+        <tr><td>商品名</td><td>{{PRODUCT_NAME_SPEC}}</td></tr>
+        <tr><td>容量 / 内容量</td><td>{{PRODUCT_VOLUME}}</td></tr>
+        <tr><td>販売価格</td><td>{{PRODUCT_PRICE}}</td></tr>
+        <tr><td>販売先</td><td>{{PRODUCT_SALES_CHANNELS}}</td></tr>
+      </table>
+    </div>
+  </div>
+  {{FAQ_HTML}}
+  <div class="section">
+    <div class="section-title"><div class="icon">🚫</div>NG事項</div>
+    <ul class="ng-list">{{NG_ITEMS_HTML}}</ul>
+  </div>
+  <div class="section">
+    <div class="section-title"><div class="icon">🏷️</div>必要なキャプション・タグ</div>
+    <div class="tags-card">
+      <div class="tag-row">
+        <div class="tag-label">📝 キャプション<br>（必須）</div>
+        <div class="tag-value"><div class="copyable-block" id="caption-block">{{REQUIRED_CAPTION}}<button class="copy-btn" onclick="copyText('caption-block',this)">コピー</button></div></div>
+      </div>
+      <div class="tag-row">
+        <div class="tag-label">＃ ハッシュタグ<br>（必須）</div>
+        <div class="tag-value">{{HASHTAGS_HTML}}</div>
+      </div>
+      <div class="tag-row">
+        <div class="tag-label">📱 アカウント<br>タグ付け（必須）</div>
+        <div class="tag-value">{{ACCOUNT_TAGS_HTML}}</div>
+      </div>
+    </div>
+  </div>
+  {{X_LINK_HTML}}
+  {{POST_EXAMPLES_HTML}}
+  <div class="section">
+    <div class="section-title"><div class="icon">📎</div>今後の流れ</div>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>配送フォームを入力して商品の到着を待つ 🎁</strong><p>フォームより配送先をご入力ください</p><a href="{{DELIVERY_FORM_URL}}" class="form-btn" target="_blank">📬 配送フォームはこちら</a></div></div>
+      <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>商品を試して投稿を作成 📱</strong><p>商品をご使用いただいたうえで、ご自身らしい投稿を作成してください</p></div></div>
+      <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>投稿完了後、GVAアカウントへ投稿リンクをDMで共有 👇</strong><p>投稿後にDMでリンクをお送りください</p></div></div>
+      <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>投稿後7日後にインサイトを共有 📬</strong><p>閲覧数・リンクタップ数などのインサイトをDMにてご共有をお願いします</p></div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title"><div class="icon">📬</div>お問い合わせ</div>
+    <div class="contact-grid">{{CONTACT_HTML}}</div>
+  </div>
+</div>
+<div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
+<script>
+function copyText(blockId,btn){
+  const block=document.getElementById(blockId);
+  const text=block.innerText.replace('コピー','').trim();
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✓ コピー完了';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='コピー';btn.classList.remove('copied');},2000);
+  });
+}
+<\/script>
+</body>
+</html>`;
+
+  let html = TEMPLATE;
+  html = html.replace(/{{PAGE_TITLE}}/g,              esc(r['ページタイトル'] || 'タイアップのご依頼'));
+  html = html.replace(/{{MONTH_LABEL}}/g,              esc(r['月度ラベル'] || ''));
+  html = html.replace(/{{PRODUCT_URL}}/g,              esc(r['商品公式サイトURL'] || '#'));
+  html = html.replace(/{{REQUEST_DESCRIPTION}}/g,      escNl(r['お願いしたいこと（説明）'] || ''));
+  html = html.replace(/{{POSTING_PERIOD}}/g,           escNl(r['投稿期間（テキスト）'] || ''));
+  html = html.replace(/{{DEADLINE}}/g,                 esc(r['応募締切'] || ''));
+  html = html.replace(/{{PLATFORMS}}/g,                escNl(r['投稿媒体'] || ''));
+  html = html.replace(/{{POST_CONTENT}}/g,             escNl(r['投稿内容'] || ''));
+  html = html.replace(/{{REWARD}}/g,                   esc(r['報酬（商品名・金額）'] || ''));
+  html = html.replace(/{{PRODUCT_DESCRIPTION}}/g,      escNl(r['商品説明テキスト'] || ''));
+  html = html.replace(/{{RECOMMEND_HTML}}/g,           buildRecommendHtml(r['こんな人にオススメ（改行区切り）'] || ''));
+  html = html.replace(/{{PRODUCT_NAME_SPEC}}/g,        escNl(r['商品名（表記）'] || ''));
+  html = html.replace(/{{PRODUCT_VOLUME}}/g,           esc(r['容量・内容量'] || ''));
+  html = html.replace(/{{PRODUCT_PRICE}}/g,            esc(r['販売価格'] || ''));
+  html = html.replace(/{{PRODUCT_SALES_CHANNELS}}/g,   escNl(r['販売先'] || ''));
+  html = html.replace(/{{FAQ_HTML}}/g,                 buildFaqHtml(r));
+  html = html.replace(/{{NG_ITEMS_HTML}}/g,            buildNgHtml(r['NG事項（改行区切り）'] || ''));
+  html = html.replace(/{{REQUIRED_CAPTION}}/g,         esc(r['必須キャプション'] || ''));
+  html = html.replace(/{{HASHTAGS_HTML}}/g,            buildHashtagsHtml(r['必須ハッシュタグ（スペース区切り）'] || ''));
+  html = html.replace(/{{ACCOUNT_TAGS_HTML}}/g,        buildAccountTagsHtml(r));
+  html = html.replace(/{{X_LINK_HTML}}/g,              buildXLinkHtml(r['X投稿用リンク（任意）'] || ''));
+  html = html.replace(/{{POST_EXAMPLES_HTML}}/g,       buildPostExamplesHtml(r['過去の投稿例（改行区切り）'] || ''));
+  html = html.replace(/{{DELIVERY_FORM_URL}}/g,        './delivery.html');
+  html = html.replace(/{{CONTACT_HTML}}/g,             buildContactHtml(r['お問い合わせ先（改行区切り）'] || ''));
+  return html;
+}
+
+
+
+
+// === 配送フォームHTML生成 ===
+function buildDeliveryHtml(r, gasEndpoint) {
+  const campaign = r['ページタイトル'] || '';
+  const ep = gasEndpoint || 'YOUR_GAS_WEB_APP_URL';
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配送先ご入力フォーム | GOOD VIBES AGENCY</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#F5F5F5;--white:#FFFFFF;--accent:#1A1A1A;--border:#E0E0E0;--section-bg:#FAFAFA;--text:#1A1A1A;--mid:#555555;--light:#999999;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--bg);font-family:"Noto Sans JP",sans-serif;font-size:14px;line-height:1.8;color:var(--text);}
+    .header{background:var(--accent);}
+    .header-inner{max-width:560px;margin:0 auto;padding:36px 24px 30px;}
+    .gva-badge{display:inline-flex;align-items:center;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:3px 10px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:14px;}
+    .header h1{font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;}
+    .header p{color:rgba(255,255,255,0.45);font-size:12px;line-height:1.7;}
+    .container{max-width:560px;margin:0 auto;padding:28px 16px 80px;}
+    .notice-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 18px;margin-bottom:24px;font-size:13px;color:var(--mid);line-height:1.8;}
+    .notice-card strong{color:var(--text);}
+    .section-label{font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.1em;text-transform:uppercase;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+    .field{margin-bottom:14px;}
+    .field label{display:block;font-size:12px;font-weight:700;color:var(--mid);margin-bottom:5px;}
+    .field label .req{color:#E53935;margin-left:3px;}
+    .field label .opt{color:var(--light);font-weight:400;margin-left:4px;font-size:11px;}
+    .field input,.field textarea,.field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:11px 13px;font-size:14px;font-family:"Noto Sans JP",sans-serif;background:var(--white);color:var(--text);transition:border-color 0.15s;-webkit-appearance:none;appearance:none;}
+    .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(26,26,26,0.08);}
+    .field textarea{min-height:80px;resize:vertical;}
+    .field .hint{font-size:11px;color:var(--light);margin-top:4px;}
+    .zip-row{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:end;}
+    .zip-btn{height:44px;background:var(--section-bg);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:700;color:var(--mid);cursor:pointer;font-family:inherit;white-space:nowrap;padding:0 14px;}
+    .zip-btn:hover{background:var(--border);}
+    .radio-group{display:flex;flex-direction:column;gap:8px;}
+    .radio-item{display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.15s;}
+    .radio-item:has(input:checked){border-color:var(--accent);background:var(--section-bg);}
+    .radio-item input[type="radio"]{width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--accent);}
+    .radio-label{font-size:13px;font-weight:700;color:var(--text);}
+    .radio-desc{font-size:11px;color:var(--light);margin-top:1px;}
+    .submit-btn{width:100%;background:var(--accent);color:white;border:none;border-radius:8px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s;margin-top:32px;}
+    .submit-btn:hover{opacity:0.85;}
+    .submit-btn:disabled{opacity:0.4;cursor:not-allowed;}
+    .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .result-card{display:none;background:#F1F8F1;border:1px solid #A5D6A7;border-radius:8px;padding:28px;text-align:center;margin-top:24px;}
+    .result-card h3{font-size:18px;color:#2E7D32;margin-bottom:10px;}
+    .result-card p{font-size:13px;color:var(--mid);line-height:1.8;}
+    .error-msg{display:none;background:#FFF3F3;border:1px solid #FFCDD2;border-radius:8px;padding:14px 16px;margin-top:16px;font-size:13px;color:#C62828;}
+    .footer{text-align:center;padding:24px 16px;color:var(--light);font-size:11px;border-top:1px solid var(--border);margin-top:40px;}
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="gva-badge">GOOD VIBES AGENCY</div>
+    <h1>📦 配送先ご入力フォーム</h1>
+    <p>ご参加いただける場合、下記フォームに配送先をご入力ください。<br>入力後、2〜5営業日以内に発送いたします。</p>
+  </div>
+</div>
+<div class="container">
+  <div class="notice-card">🎁 <strong>ご協力いただいた案件：</strong>${campaign.replace(/`/g,"'")}<br>ご不明な点はGVAアカウントのDMまでご連絡ください。</div>
+  <form id="df">
+    <input type="hidden" name="campaign" value="${campaign.replace(/"/g,'&quot;')}">
+    <div class="section-label">基本情報</div>
+    <div class="field"><label>Instagram ID <span class="req">*</span></label><input type="text" name="instagram_id" placeholder="@username" required></div>
+    <div class="field"><label>お名前（本名） <span class="req">*</span></label><input type="text" name="full_name" placeholder="山田 花子" required><div class="hint">配送伝票に記載されます。フルネームでご入力ください。</div></div>
+    <div class="field"><label>電話番号 <span class="req">*</span></label><input type="tel" name="phone" placeholder="090-0000-0000" required></div>
+    <div class="section-label">配送先住所</div>
+    <div class="field"><label>郵便番号 <span class="req">*</span></label><div class="zip-row"><input type="text" name="zip" id="zip" placeholder="000-0000" maxlength="8" required><button type="button" class="zip-btn" onclick="lz()">住所を自動入力</button></div></div>
+    <div class="field"><label>都道府県 <span class="req">*</span></label><select name="prefecture" id="pref" required><option value="">選択してください</option><option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option></select></div>
+    <div class="field"><label>市区町村・番地 <span class="req">*</span></label><input type="text" name="address1" id="a1" placeholder="渋谷区渋谷1-2-3" required></div>
+    <div class="field"><label>建物名・部屋番号 <span class="opt">任意</span></label><input type="text" name="address2" placeholder="○○マンション 101号室"></div>
+    <div class="section-label">二次利用について</div>
+    <div class="field">
+      <label>投稿画像・動画の二次利用可否 <span class="req">*</span></label>
+      <div class="hint" style="margin-bottom:10px">クライアントによるSNS・広告等での再使用に関するご意向をお聞かせください。</div>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="secondary_use" value="OK（二次利用可）" required><div><div class="radio-label">✅ OK（二次利用可）</div><div class="radio-desc">クライアントのSNSや広告素材として使用することを許可します</div></div></label>
+        <label class="radio-item"><input type="radio" name="secondary_use" value="NG（二次利用不可）"><div><div class="radio-label">🚫 NG（二次利用不可）</div><div class="radio-desc">投稿はご自身のアカウントのみでの使用とします</div></div></label>
+        <label class="radio-item"><input type="radio" name="secondary_use" value="要相談"><div><div class="radio-label">💬 要相談</div><div class="radio-desc">使用目的・条件によって判断したいです</div></div></label>
+      </div>
+    </div>
+    <div class="section-label">備考</div>
+    <div class="field"><label>備考・連絡事項 <span class="opt">任意</span></label><textarea name="notes" placeholder="不在が多い時間帯など、ご連絡事項があればご記入ください。"></textarea></div>
+    <button type="submit" class="submit-btn" id="sb"><span id="st">送信する</span><span class="spinner" id="sp"></span></button>
+  </form>
+  <div class="error-msg" id="em">送信中にエラーが発生しました。時間をおいて再度お試しください。</div>
+  <div class="result-card" id="rc"><h3>✅ 送信完了しました！</h3><p>配送先情報を受け付けました。<br>2〜5営業日以内に発送いたします。<br><br>引き続きよろしくお願いいたします🙇‍♀️</p></div>
+</div>
+<div class="footer">GOOD VIBES AGENCY — 本フォームは依頼タレント様専用です</div>
+<script>
+const EP='${ep.replace(/'/g,"\'")}';
+document.getElementById('zip').addEventListener('input',function(){let v=this.value.replace(/[^0-9]/g,'');if(v.length>3)v=v.slice(0,3)+'-'+v.slice(3,7);this.value=v;});
+async function lz(){const z=document.getElementById('zip').value.replace(/[^0-9]/g,'');if(z.length!==7){alert('郵便番号を7桁で入力してください');return;}try{const r=await fetch('https://zipcloud.ibsnet.co.jp/api/search?zipcode='+z);const d=await r.json();if(d.results){const x=d.results[0];const p=document.getElementById('pref');for(let i=0;i<p.options.length;i++){if(p.options[i].text===x.address1){p.selectedIndex=i;break;}}document.getElementById('a1').value=x.address2+x.address3;}else{alert('住所が見つかりませんでした。');}}catch(e){alert('住所の取得に失敗しました。');}}
+document.getElementById('df').addEventListener('submit',async function(e){e.preventDefault();const sb=document.getElementById('sb');const st=document.getElementById('st');const sp=document.getElementById('sp');sb.disabled=true;st.style.display='none';sp.style.display='block';document.getElementById('em').style.display='none';try{if(EP!=='YOUR_GAS_WEB_APP_URL'){await fetch(EP,{method:'POST',mode:'no-cors',body:new URLSearchParams(new FormData(this))});}else{await new Promise(r=>setTimeout(r,800));}this.style.display='none';document.querySelector('.notice-card').style.display='none';document.getElementById('rc').style.display='block';}catch(err){sb.disabled=false;st.style.display='block';sp.style.display='none';document.getElementById('em').style.display='block';}});
+<\/script>
+</body>
+</html>`;
+}
+
+// ── PIN ──
+function initPin() {
+  if (localStorage.getItem(LS_PIN) === '1') { showApp(); return; }
+  document.getElementById('pin-screen').classList.remove('hidden');
+  document.getElementById('p0').focus();
+}
+function showApp() {
+  document.getElementById('pin-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  const saved = localStorage.getItem(LS_GAS);
+  if (saved) document.getElementById('gas-url-input').value = saved;
+}
+document.querySelectorAll('.pin-box').forEach((box, i) => {
+  box.addEventListener('input', e => {
+    const v = e.target.value.replace(/[^0-9]/g,'');
+    e.target.value = v;
+    if (v && i < 3) document.getElementById('p'+(i+1)).focus();
+    if (i === 3 && v) checkPin();
+  });
+  box.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !e.target.value && i > 0) document.getElementById('p'+(i-1)).focus();
+  });
+});
+function checkPin() {
+  const pin = [0,1,2,3].map(i => document.getElementById('p'+i).value).join('');
+  if (pin === PIN_CORRECT) {
+    localStorage.setItem(LS_PIN, '1');
+    showApp();
+  } else {
+    document.getElementById('pin-error').textContent = 'PINが正しくありません';
+    [0,1,2,3].forEach(i => { document.getElementById('p'+i).value = ''; });
+    document.getElementById('p0').focus();
+    setTimeout(() => { document.getElementById('pin-error').textContent = ''; }, 2000);
+  }
+}
+document.getElementById('logout-btn').addEventListener('click', () => {
+  localStorage.removeItem(LS_PIN);
+  location.reload();
+});
+
+// ── 設定 ──
+document.getElementById('settings-toggle').addEventListener('click', () => {
+  document.getElementById('settings-bar').classList.toggle('open');
+});
+document.getElementById('settings-save').addEventListener('click', () => {
+  const v = document.getElementById('gas-url-input').value.trim();
+  if (v) { localStorage.setItem(LS_GAS, v); alert('保存しました'); }
+});
+
+// ── モーダル開閉 ──
+function openModal() {
+  document.getElementById('new-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('create-result').innerHTML = '';
+  document.getElementById('create-form').style.display = 'block';
+}
+function closeModal() {
+  document.getElementById('new-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('new-btn').addEventListener('click', openModal);
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('new-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── プレビュー ──
+document.getElementById('preview-btn').addEventListener('click', () => {
+  const fd = new FormData(document.getElementById('create-form'));
+  const r = {}; fd.forEach((v,k) => r[k] = v);
+  const html = buildBriefHtml(r);
+  document.getElementById('preview-frame').srcdoc = html;
+  document.getElementById('preview-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+});
+document.getElementById('preview-close').addEventListener('click', () => {
+  document.getElementById('preview-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+});
+
+// ── 新規作成送信 ──
+document.getElementById('submit-btn').addEventListener('click', async () => {
+  const gasEp = localStorage.getItem(LS_GAS);
+  if (!gasEp) { alert('設定画面でGAS Web App URLを設定してください'); document.getElementById('settings-bar').classList.add('open'); return; }
+  const form = document.getElementById('create-form');
+  if (!form.reportValidity()) return;
+
+  const fd = new FormData(form);
+  const r = {}; fd.forEach((v,k) => r[k] = v);
+  const slug        = generateSlug(r['ブランド名']);
+  const pageUrl     = PAGES_BASE + '/briefs/' + slug + '/';
+  const deliveryUrl = pageUrl + 'delivery.html';
+
+  const btn     = document.getElementById('submit-btn');
+  const btnText = document.getElementById('submit-text');
+  const spinner = document.getElementById('submit-spinner');
+  btn.disabled = true; btnText.style.display = 'none'; spinner.style.display = 'block';
+
+  try {
+    const params = new URLSearchParams(r);
+    params.append('slug', slug);
+    await fetch(gasEp, { method:'POST', mode:'no-cors', body: params });
+
+    btnText.style.display = 'block'; spinner.style.display = 'none';
+    form.style.display = 'none';
+    document.getElementById('create-result').innerHTML = `
+      <div class="result-box">
+        <h3>🎉 送信完了！</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:16px">GASがページを生成中です。2〜3分後に下記URLで確認できます。</p>
+        <div class="url-row"><div class="url-label">📋 タレント向け依頼ページ</div><div class="url-val"><a href="${pageUrl}" target="_blank">${pageUrl}</a></div></div>
+        <div class="url-row" style="margin-top:8px"><div class="url-label">📦 配送フォーム</div><div class="url-val"><a href="${deliveryUrl}" target="_blank">${deliveryUrl}</a></div></div>
+        <button onclick="location.reload()" style="margin-top:16px;background:var(--accent);color:#fff;border:none;border-radius:7px;padding:10px 24px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">← 一覧に戻る（再読み込み）</button>
+      </div>`;
+  } catch(err) {
+    btnText.style.display = 'block'; spinner.style.display = 'none';
+    document.getElementById('create-result').innerHTML = `<div class="error-box">❌ エラーが発生しました: ${esc(err.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// ── 起動 ──
+initPin();
+</script>
 </body>
 </html>
