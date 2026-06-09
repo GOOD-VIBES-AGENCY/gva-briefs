@@ -208,14 +208,21 @@ function buildHashtagsHtml(raw) {
 
 function buildAccountTagsHtml(r) {
   const platforms = [
-    { key: 'Instagramアカウントタグ', label: 'Instagram' },
-    { key: 'TikTokアカウントタグ',    label: 'TikTok'    },
-    { key: 'Xアカウントタグ',         label: 'X'         }
+    {key:'Instagramアカウントタグ', label:'Instagram'},
+    {key:'TikTokアカウントタグ',    label:'TikTok'},
+    {key:'Xアカウントタグ',         label:'X'}
   ];
-  return platforms
-    .filter(p => r[p.key])
-    .map(p => `<div><small style="color:var(--light);font-size:11px">${p.label}：</small><strong>${esc(r[p.key])}</strong></div>`)
-    .join('\n') || '（未設定）';
+  const result = platforms.filter(p => r[p.key])
+    .map(p => {
+      const val = esc(r[p.key]);
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
+             '<span><small style="color:var(--light);font-size:11px">' + p.label + '：</small>' +
+             '<strong>' + val + '</strong></span>' +
+             '<button class="copy-hint" onclick="navigator.clipboard.writeText(\'' + val + '\');' +
+             'this.textContent=\'✓\';setTimeout(()=>this.textContent=\'コピー\',1500)">コピー</button>' +
+             '</div>';
+    }).join('\n');
+  return result || '（未設定）';
 }
 
 function buildXLinkHtml(link) {
@@ -695,7 +702,7 @@ const TEMPLATE = `<!DOCTYPE html>
 <div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
 <script>
 function copyHashtags(btn){
-  var tags=document.querySelectorAll('.hashtag');
+  var tags=document.querySelectorAll('#hashtag-wrap .hashtag');
   var text=Array.from(tags).map(function(t){return t.textContent;}).join(' ');
   navigator.clipboard.writeText(text).then(function(){
     btn.textContent='✓ コピー完了';btn.classList.add('copied');
