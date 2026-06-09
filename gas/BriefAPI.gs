@@ -198,7 +198,7 @@ function buildDeliveryHtml_(r, gasEndpoint) {
 '    .zip-btn:hover{background:var(--border);}\n' +
 '    .radio-group{display:flex;flex-direction:column;gap:8px;}\n' +
 '    .radio-item{display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color 0.15s;}\n' +
-'    .radio-item:has(input:checked){border-color:#1A1A1A;background:#FAFAFA;}.radio-item input[type=\"radio\"]{position:absolute;opacity:0;width:0;height:0;pointer-events:none;}.radio-item::before{content:\"\";width:18px;height:18px;border:2px solid #CCCCCC;border-radius:50%;flex-shrink:0;margin-top:2px;transition:all 0.15s;}.radio-item:has(input:checked)::before{border-color:#1A1A1A;box-shadow:inset 0 0 0 4px #1A1A1A;}\n' +
+'    .radio-item:has(input:checked){border-color:#1A1A1A;background:#FAFAFA;}.radio-item{position:relative;padding:12px 14px 12px 46px;align-items:center;}.radio-item input[type=\"radio\"]{display:none;}.radio-item::before{content:\"\";position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:2px solid #CCCCCC;border-radius:50%;transition:all 0.2s;}.radio-item:has(input:checked)::before{border-color:#1A1A1A;background:#1A1A1A;box-shadow:inset 0 0 0 5px white;}.radio-item:has(input:checked){border-color:#1A1A1A;background:#FAFAFA;}\n' +
 '    .radio-item input[type="radio"]{width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--accent);-webkit-appearance:radio;appearance:radio;}\n' +
 '    .radio-label{font-size:13px;font-weight:700;color:var(--text);}\n' +
 '    .radio-desc{font-size:11px;color:var(--light);margin-top:1px;}\n' +
