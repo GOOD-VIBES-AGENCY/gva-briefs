@@ -109,6 +109,7 @@
     .card-delete-btn{position:absolute;top:12px;right:12px;background:none;border:none;color:#CCC;font-size:14px;cursor:pointer;padding:4px 6px;border-radius:4px;opacity:0;transition:all 0.15s;}
     .brief-card:hover .card-delete-btn{opacity:1;}
     .card-delete-btn:hover{background:#FFF0F0;color:#E53935;}
+.card-footer{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}.card-btn{flex:1;border:1px solid var(--border);border-radius:6px;padding:7px 0;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--white);transition:all 0.15s;text-align:center;}.card-btn.edit-btn{color:var(--mid);}.card-btn.edit-btn:hover{background:var(--section-bg);border-color:var(--accent);}.card-btn.delete-btn{color:#E53935;}.card-btn.delete-btn:hover{background:#FFF3F3;border-color:#E53935;}.edit-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;overflow-y:auto;padding:20px;}.edit-modal-overlay.open{display:block;}
     @media(max-width:600px){.m-2col{grid-template-columns:1fr;}.brief-grid{grid-template-columns:1fr;}.modal-body{padding:20px 16px;}.app-header-inner{flex-wrap:wrap;gap:8px;}}
   </style>
 </head>
@@ -163,7 +164,7 @@
       </div>
     </div>
     <!-- BRIEFS_LIST -->
-      <div class="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>
+      <div class="empty-state" id="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>
     </div>
   </div>
 </div>
@@ -245,6 +246,18 @@
   </div>
 </div>
 
+
+<div class="edit-modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>✏️ 依頼ページを編集</h2>
+      <button class="modal-close" id="edit-modal-close">✕</button>
+    </div>
+    <div class="modal-body" id="edit-modal-body">
+      <div style="text-align:center;padding:40px;color:var(--light);">読み込み中...</div>
+    </div>
+  </div>
+</div>
 <!-- ── プレビューモーダル ── -->
 <div class="preview-overlay" id="preview-overlay">
   <div class="preview-modal">
@@ -701,7 +714,8 @@ function showApp() {
   document.getElementById('pin-screen').classList.add('hidden');
   document.getElementById('app').classList.add('visible');
   const saved = localStorage.getItem(LS_GAS);
-  if (saved) document.getElementById('gas-url-input').value = saved;
+  if (saved && document.getElementById('gas-url-input')) document.getElementById('gas-url-input').value = saved;
+  setTimeout(injectCardButtons, 50);
 }
 document.querySelectorAll('.pin-box').forEach((box, i) => {
   box.addEventListener('input', e => {
@@ -778,7 +792,7 @@ async function deleteCard(slug, title) {
     // カードが全部なくなったら空メッセージを表示
     const grid = document.getElementById('brief-grid');
     if (grid && !grid.querySelector('.brief-card')) {
-      grid.innerHTML = '<div class="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>';
+      grid.innerHTML = '<div class="empty-state" id="empty-state">まだ案件がありません。<br>「＋ 新規作成」から最初の案件を作成してください。</div>';
     }
   } catch(e) {
     alert('削除に失敗しました。しばらく後に再試行してください。');
@@ -832,8 +846,169 @@ document.getElementById('submit-btn').addEventListener('click', async () => {
 if (!localStorage.getItem(LS_GAS)) {
   localStorage.setItem(LS_GAS, 'https://script.google.com/macros/s/AKfycby8tsoJxFMuTPtlb4EOh7Vv___KhVMSHmzcEFKPg5xKktwRp6T7vPYYARtMYAAGEEZi/exec');
 }
+
+// ── カードボタン注入 + 編集モーダル ──
+const EDIT_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
+
+function injectCardButtons() {
+  const cards = document.querySelectorAll('.brief-card[data-slug]');
+  const es = document.getElementById('empty-state');
+  if (es) es.style.display = cards.length > 0 ? 'none' : '';
+  cards.forEach(function(card) {
+    if (card.querySelector('.card-footer')) return;
+    const slug  = card.dataset.slug;
+    const titleEl = card.querySelector('.brief-title');
+    const title = titleEl ? titleEl.textContent : slug;
+    const footer = document.createElement('div');
+    footer.className = 'card-footer';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'card-btn edit-btn';
+    editBtn.textContent = '✏️ 編集';
+    editBtn.onclick = function() { openEditModal(slug); };
+    const delBtn = document.createElement('button');
+    delBtn.className = 'card-btn delete-btn';
+    delBtn.textContent = '🗑 削除';
+    delBtn.onclick = function() { deleteCard(slug, title); };
+    footer.appendChild(editBtn);
+    footer.appendChild(delBtn);
+    card.appendChild(footer);
+  });
+}
+
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEditModal();
+});
+document.getElementById('edit-modal-close').addEventListener('click', closeEditModal);
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function openEditModal(slug) {
+  document.getElementById('edit-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const body = document.getElementById('edit-modal-body');
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--light);">読み込み中...</div>';
+  try {
+    const res  = await fetch(EDIT_BASE + '/briefs/' + slug + '/data.json?t=' + Date.now());
+    const data = await res.json();
+    const f    = data.fields || {};
+    const gasEp = data.gasEndpoint || localStorage.getItem(LS_GAS) || '';
+    body.innerHTML = buildEditForm(slug, f, gasEp);
+  } catch(e) {
+    body.innerHTML = '<div style="padding:20px;color:#C62828;">読み込みに失敗しました: ' + e.message + '</div>';
+  }
+}
+
+function buildEditForm(slug, f, gasEp) {
+  function v(n) {
+    var val = f[n] || '';
+    return val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function inp(lbl, n, req) {
+    return '<div class="mf"><label>' + lbl + (req?' <span class="req">*</span>':'') + '</label>' +
+           '<input type="text" name="' + n + '" value="' + v(n) + '"' + (req?' required':'') + '></div>';
+  }
+  function ta(lbl, n, req) {
+    return '<div class="mf"><label>' + lbl + (req?' <span class="req">*</span>':'') + '</label>' +
+           '<textarea name="' + n + '"' + (req?' required':'') + '>' + v(n) + '</textarea></div>';
+  }
+  function r2(a,b) { return '<div class="m-2col">' + a + b + '</div>'; }
+  var faq = '';
+  for (var i=1;i<=5;i++) {
+    faq += '<div class="faq-block"><div class="faq-block-num">FAQ '+i+'</div>';
+    faq += inp('Q','FAQ質問'+i,false) + ta('A','FAQ回答'+i,false) + '</div>';
+  }
+  return '<form id="ef">' +
+    '<div class="m-section">基本情報</div>' +
+    inp('ページタイトル','ページタイトル',true) +
+    r2(inp('月度ラベル','月度ラベル',false), inp('ブランド名','ブランド名',true)) +
+    inp('商品公式サイトURL','商品公式サイトURL',true) +
+    '<div class="m-section">案件概要</div>' +
+    ta('お願いしたいこと（説明）','お願いしたいこと（説明）',true) +
+    ta('投稿期間（テキスト）','投稿期間（テキスト）',true) +
+    r2(inp('応募締切','応募締切',true), inp('報酬（商品名・金額）','報酬（商品名・金額）',true)) +
+    ta('投稿媒体','投稿媒体',true) +
+    ta('投稿内容','投稿内容',true) +
+    '<div class="m-section">商品情報</div>' +
+    ta('商品説明テキスト','商品説明テキスト',true) +
+    ta('こんな人にオススメ（改行区切り）','こんな人にオススメ（改行区切り）',false) +
+    ta('商品名（表記）','商品名（表記）',true) +
+    r2(inp('容量・内容量','容量・内容量',false), inp('販売価格','販売価格',false)) +
+    ta('販売先','販売先',false) +
+    '<div class="m-section">FAQ（最大5件）</div>' + faq +
+    '<div class="m-section">NG事項 &amp; 必須表現</div>' +
+    ta('NG事項（改行区切り）','NG事項（改行区切り）',true) +
+    ta('必須キャプション','必須キャプション',true) +
+    inp('キャプション補足','キャプション補足',false) +
+    inp('必須ハッシュタグ（スペース区切り）','必須ハッシュタグ（スペース区切り）',true) +
+    inp('ハッシュタグ補足','ハッシュタグ補足',false) +
+    r2(inp('Instagramアカウントタグ','Instagramアカウントタグ',false), inp('TikTokアカウントタグ','TikTokアカウントタグ',false)) +
+    r2(inp('Xアカウントタグ','Xアカウントタグ',false), inp('X投稿用リンク（任意）','X投稿用リンク（任意）',false)) +
+    '<div class="m-section">参考例・フロー</div>' +
+    ta('過去の投稿例（改行区切り）','過去の投稿例（改行区切り）',false) +
+    ta('お問い合わせ先（改行区切り）','お問い合わせ先（改行区切り）',true) +
+    '</form>' +
+    '<div class="modal-footer"><button class="submit-btn" id="edit-save-btn">💾 保存する</button></div>' +
+    '<div id="edit-result"></div>';
+}
+
+document.getElementById('edit-modal-body').addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'edit-save-btn') {
+    var slug = document.getElementById('edit-modal').dataset.slug;
+    var gasEp = document.getElementById('edit-modal').dataset.gas;
+    submitEdit(slug, gasEp);
+  }
+});
+
+async function openEditModal(slug) {
+  const overlay = document.getElementById('edit-modal');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const body = document.getElementById('edit-modal-body');
+  body.innerHTML = '<div style="text-align:center;padding:40px;color:var(--light);">読み込み中...</div>';
+  try {
+    const res  = await fetch(EDIT_BASE + '/briefs/' + slug + '/data.json?t=' + Date.now());
+    const data = await res.json();
+    const gasEp = data.gasEndpoint || localStorage.getItem(LS_GAS) || '';
+    overlay.dataset.slug = slug;
+    overlay.dataset.gas  = gasEp;
+    body.innerHTML = buildEditForm(slug, data.fields || {}, gasEp);
+    document.getElementById('edit-save-btn').onclick = function() { submitEdit(slug, gasEp); };
+  } catch(e) {
+    body.innerHTML = '<div style="padding:20px;color:#C62828;">読み込みに失敗しました: ' + e.message + '</div>';
+  }
+}
+
+async function submitEdit(slug, gasEp) {
+  if (!gasEp) { alert('GAS URLが設定されていません'); return; }
+  const form = document.getElementById('ef');
+  if (!form || !form.reportValidity()) return;
+  const btn = document.getElementById('edit-save-btn');
+  btn.disabled = true; btn.textContent = '保存中...';
+  const params = new URLSearchParams(new FormData(form));
+  params.append('action', 'update');
+  params.append('slug', slug);
+  try {
+    await fetch(gasEp, { method:'POST', mode:'no-cors', body: params });
+    document.getElementById('edit-result').innerHTML =
+      '<div style="padding:12px;background:#F1F8F1;border-radius:8px;text-align:center;font-size:13px;color:#2E7D32;margin-top:12px;">✅ 保存しました！ページは2〜3分後に反映されます。</div>';
+    const card = document.querySelector('[data-slug="' + slug + '"]');
+    if (card) {
+      const nt = params.get('ページタイトル');
+      if (nt && card.querySelector('.brief-title')) card.querySelector('.brief-title').textContent = nt;
+    }
+  } catch(e) {
+    document.getElementById('edit-result').innerHTML =
+      '<div style="padding:12px;color:#C62828;font-size:13px;">❌ エラーが発生しました。</div>';
+  }
+  btn.disabled = false; btn.textContent = '💾 保存する';
+}
+
 // ── 起動 ──
 initPin();
+
 </script>
 </body>
 </html>
