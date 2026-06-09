@@ -78,11 +78,9 @@
 
 <div class="container">
   <div class="token-card">
-    <span class="tc-label">🔑 GitHub Token</span>
-    <input type="password" id="gh-token" placeholder="ghp_xxxx..." autocomplete="off" style="margin-bottom:14px">
-    <span class="tc-label" style="margin-top:4px">⚡ GAS Web App URL（配送フォーム送信先）</span>
+    <span class="tc-label">⚡ GAS Web App URL</span>
     <input type="text" id="gas-endpoint" placeholder="https://script.google.com/macros/s/..." autocomplete="off">
-    <p class="hint">初回入力後はブラウザのlocalStorageに保存されます。GASデプロイ後に設定してください。</p>
+    <p class="hint">BriefAPI.gs をデプロイして取得したURLを貼り付けてください。初回のみ設定が必要です。</p>
   </div>
 
   <form id="brief-form">
@@ -299,19 +297,13 @@
 
 <script>
 // === 設定 ===
-const GITHUB_OWNER = 'GOOD-VIBES-AGENCY';
-const GITHUB_REPO  = 'gva-briefs';
-const PAGES_BASE   = 'https://goodvibesagency.tokyo/gva-briefs';
+const PAGES_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
 
 // === Settings 管理 ===
-const tokenInput   = document.getElementById('gh-token');
-const gasInput     = document.getElementById('gas-endpoint');
-const savedToken   = localStorage.getItem('gva_gh_token');
-const savedGasEp   = localStorage.getItem('gva_gas_endpoint');
-if (savedToken) tokenInput.value = savedToken;
-if (savedGasEp)  gasInput.value  = savedGasEp;
-tokenInput.addEventListener('change', () => { if(tokenInput.value) localStorage.setItem('gva_gh_token', tokenInput.value); });
-gasInput.addEventListener('change',   () => { localStorage.setItem('gva_gas_endpoint', gasInput.value); });
+const gasInput   = document.getElementById('gas-endpoint');
+const savedGasEp = localStorage.getItem('gva_gas_endpoint');
+if (savedGasEp) gasInput.value = savedGasEp;
+gasInput.addEventListener('change', () => { localStorage.setItem('gva_gas_endpoint', gasInput.value); });
 
 // === ヘルパー ===
 function esc(str) {
@@ -321,9 +313,16 @@ function esc(str) {
 function escNl(str) { return esc(str).replace(/\n/g, '<br>'); }
 
 function generateSlug(brand) {
-  const now = new Date();
-  const yymm = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  return (brand + '-' + yymm).toLowerCase().replace(/[^a-z0-9\-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'brief-' + Date.now();
+  const now  = new Date();
+  const date = now.getFullYear()
+             + String(now.getMonth()+1).padStart(2,'0')
+             + String(now.getDate()).padStart(2,'0');
+  const rand = Math.random().toString(36).slice(2,5);
+  return (brand + '-' + date + '-' + rand)
+    .toLowerCase()
+    .replace(/[^a-z0-9\-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'brief-' + Date.now();
 }
 
 function buildRecommendHtml(raw) {
@@ -614,10 +613,7 @@ function copyText(blockId,btn){
   return html;
 }
 
-// === Base64エンコード（UTF-8対応） ===
-function utf8ToBase64(str) {
-  return btoa(unescape(encodeURIComponent(str)));
-}
+
 
 
 // === 配送フォームHTML生成 ===
@@ -722,56 +718,6 @@ document.getElementById('df').addEventListener('submit',async function(e){e.prev
 </html>`;
 }
 
-// === GitHub API ===
-async function pushToGitHub(path, content, message, token) {
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`;
-  let sha = '';
-  try {
-    const existing = await fetch(url, { headers: { Authorization: 'token ' + token, 'User-Agent': 'GVA-Briefs' } });
-    if (existing.ok) { sha = (await existing.json()).sha; }
-  } catch(e) {}
-
-  const payload = { message, content: utf8ToBase64(content) };
-  if (sha) payload.sha = sha;
-
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json', 'User-Agent': 'GVA-Briefs' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error('GitHub API エラー (' + res.status + '): ' + (err.message || ''));
-  }
-  return await res.json();
-}
-
-async function updateIndex(r, slug, pageUrl, token) {
-  const indexApiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/index.html`;
-  let currentContent = '';
-  let sha = '';
-  try {
-    const existing = await fetch(indexApiUrl, { headers: { Authorization: 'token ' + token, 'User-Agent': 'GVA-Briefs' } });
-    if (existing.ok) {
-      const data = await existing.json();
-      sha = data.sha;
-      currentContent = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
-    }
-  } catch(e) {}
-
-  const now = new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'2-digit',day:'2-digit'});
-  const newCard = `\n    <div class="brief-card">
-      <div class="brief-meta">${esc(now)} ／ ${esc(r['ブランド名'] || '')}</div>
-      <div class="brief-title">${esc(r['ページタイトル'] || '')}</div>
-      <a href="${esc(pageUrl)}" class="brief-link" target="_blank">ページを開く →</a>
-    </div>`;
-
-  if (currentContent.includes('<!-- BRIEFS_LIST -->')) {
-    currentContent = currentContent.replace('<!-- BRIEFS_LIST -->', newCard + '\n    <!-- BRIEFS_LIST -->');
-  }
-  await pushToGitHub('index.html', currentContent, '📋 Update index: ' + r['ページタイトル'], token);
-}
-
 // === プレビュー ===
 document.getElementById('preview-btn').addEventListener('click', () => {
   const formData = new FormData(document.getElementById('brief-form'));
@@ -798,64 +744,59 @@ document.getElementById('preview-modal').addEventListener('click', (e) => {
 document.getElementById('brief-form').addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const token     = tokenInput.value.trim();
   const gasEndpoint = gasInput.value.trim();
-  if (!token) { alert('GitHub Token を入力してください'); tokenInput.focus(); return; }
-  localStorage.setItem('gva_gh_token', token);
+  if (!gasEndpoint) { alert('GAS Web App URL を設定してください'); gasInput.focus(); return; }
   localStorage.setItem('gva_gas_endpoint', gasEndpoint);
 
   const formData = new FormData(e.target);
   const r = {};
   formData.forEach((v, k) => { r[k] = v; });
 
-  const btn = document.getElementById('submit-btn');
-  const progressEl = document.getElementById('progress');
-  const progressText = document.getElementById('progress-text');
-  const resultCard = document.getElementById('result-card');
+  // スラグ・URL をクライアント側で生成（GASに渡す）
+  const slug        = generateSlug(r['ブランド名']);
+  const pageUrl     = PAGES_BASE + '/briefs/' + slug + '/';
+  const deliveryUrl = pageUrl + 'delivery.html';
+
+  const btn         = document.getElementById('submit-btn');
+  const progressEl  = document.getElementById('progress');
+  const progressText= document.getElementById('progress-text');
+  const resultCard  = document.getElementById('result-card');
 
   btn.disabled = true;
-  progressEl.style.display = 'block';
-  resultCard.style.display = 'none';
+  progressEl.style.display  = 'block';
+  resultCard.style.display  = 'none';
+  progressText.textContent  = 'GAS にデータを送信中...';
 
   try {
-    const slug         = generateSlug(r['ブランド名']);
-    const pageUrl      = PAGES_BASE + '/briefs/' + slug + '/';
-    const deliveryUrl  = PAGES_BASE + '/briefs/' + slug + '/delivery.html';
+    // slug を含めてフォームデータを送信（GAS がHTMLを生成してGitHubにプッシュ）
+    const params = new URLSearchParams(r);
+    params.append('slug', slug);
 
-    progressText.textContent = '依頼ページを生成中...';
-    const briefHtml    = buildBriefHtml(r);
-    const deliveryHtml = buildDeliveryHtml(r, gasEndpoint);
+    await fetch(gasEndpoint, {
+      method: 'POST',
+      mode:   'no-cors',   // GAS CORS制限を回避 / レスポンスは不要
+      body:   params
+    });
 
-    progressText.textContent = 'GitHubにプッシュ中...（依頼ページ）';
-    await pushToGitHub('briefs/' + slug + '/index.html',    briefHtml,    '✨ Add brief: '    + r['ページタイトル'], token);
-
-    progressText.textContent = 'GitHubにプッシュ中...（配送フォーム）';
-    await pushToGitHub('briefs/' + slug + '/delivery.html', deliveryHtml, '📦 Add delivery: ' + r['ページタイトル'], token);
-
-    progressText.textContent = '一覧ページを更新中...';
-    await updateIndex(r, slug, pageUrl, token);
-
+    // URLは確定しているので即座に成功表示
     progressEl.style.display = 'none';
-    resultCard.className = 'result-card success';
+    resultCard.className     = 'result-card success';
     resultCard.style.display = 'block';
-    document.getElementById('result-title').textContent = '🎉 生成完了！';
+    document.getElementById('result-title').textContent = '🎉 送信完了！';
     document.getElementById('result-body').innerHTML = `
-      <p style="color:var(--mid);margin-bottom:16px">2ページが公開されました（GitHub Pagesの反映まで約1〜2分）</p>
-      <div style="text-align:left;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--mid)">📋 タレント向け依頼ページ</div>
+      <p style="color:var(--mid);margin-bottom:16px">GASでページを生成中です。<strong>2〜3分後</strong>に下記URLで確認してください。</p>
+      <div style="text-align:left;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.08em;text-transform:uppercase">タレント向け依頼ページ</div>
       <div class="result-url"><a href="${pageUrl}" target="_blank">${pageUrl}</a></div>
-      <div style="text-align:left;margin:12px 0 4px;font-size:12px;font-weight:700;color:var(--mid)">📦 配送フォーム</div>
+      <div style="text-align:left;margin:14px 0 6px;font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.08em;text-transform:uppercase">配送フォーム（依頼ページ内にリンクあり）</div>
       <div class="result-url"><a href="${deliveryUrl}" target="_blank">${deliveryUrl}</a></div>
       <a href="${pageUrl}" target="_blank" class="open-btn" style="margin-top:16px">依頼ページを開く →</a>
     `;
   } catch(err) {
     progressEl.style.display = 'none';
-    resultCard.className = 'result-card error';
+    resultCard.className     = 'result-card error';
     resultCard.style.display = 'block';
     document.getElementById('result-title').textContent = '❌ エラーが発生しました';
-    document.getElementById('result-body').innerHTML = `
-      <p style="color:var(--mid)">ページの生成中にエラーが発生しました。</p>
-      <div class="error-detail">${esc(err.message)}</div>
-    `;
+    document.getElementById('result-body').innerHTML = `<div class="error-detail">${esc(err.message)}</div>`;
   } finally {
     btn.disabled = false;
   }
