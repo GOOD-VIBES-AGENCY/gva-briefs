@@ -661,7 +661,7 @@ const TEMPLATE = `<!DOCTYPE html>
     </form>
   </div>
 </div>
-<div class="footer"><strong>GOOD VIBES AGENCY</strong><br>本ページのURLは依頼タレント様のみへの共有としてください</div>
+
 <script>
 function copyHashtags(btn){
   var tags=document.querySelectorAll('.hashtag');
