@@ -1,73 +1,111 @@
 // =============================================
-// GVA Brief API — ウェブアプリエンドポイント
+// GVA Brief API — ウェブアプリエンドポイント（v2）
 // =============================================
-//
-// 【このファイルを Code.gs と同じ GAS プロジェクトに追加してください】
-//
-// Script Properties に以下を設定：
-//   GITHUB_TOKEN          : GitHub Personal Access Token
-//   DELIVERY_GAS_ENDPOINT : 配送フォームの GAS Web App URL（DeliveryForm.gs のデプロイURL）
-//
-// デプロイ設定：
-//   種類     : ウェブアプリ
-//   実行     : 自分
-//   アクセス : 全員（匿名を含む）
-//
-// =============================================
+// Code.gs と同じプロジェクトに追加してデプロイ
+// Script Properties: GITHUB_TOKEN, DELIVERY_GAS_ENDPOINT
 
 const BRIEF_PAGES_BASE = 'https://goodvibesagency.tokyo/gva-briefs';
 
-// ── メイン：フォーム送信を受け取る ─────────────────────
 function doPost(e) {
   try {
     const r = e.parameter;
-    const props = PropertiesService.getScriptProperties();
-    const deliveryEp = props.getProperty('DELIVERY_GAS_ENDPOINT') || '';
-
-    // クライアントから受け取ったスラグ（日付+乱数付き → 同月同ブランドでも重複しない）
-    const slug        = r['slug'] || ('brief-' + Date.now());
-    const pageUrl     = BRIEF_PAGES_BASE + '/briefs/' + slug + '/';
-    const deliveryUrl = pageUrl + 'delivery.html';
-
-    // 配送フォームURLを自動セット（Code.gs の buildHtml で使用）
-    r['配送フォームURL'] = deliveryUrl;
-
-    // HTML 生成（Code.gs の関数を使用）
-    const briefHtml = buildHtml(r);
-    const delivHtml = buildDeliveryHtml_(r, deliveryEp);
-
-    // GitHub にプッシュ（Code.gs の pushToGitHub を使用 → Token は Script Properties に格納済み）
-    pushToGitHub(
-      'briefs/' + slug + '/index.html',
-      briefHtml,
-      '✨ Add brief: ' + (r['ページタイトル'] || '')
-    );
-    pushToGitHub(
-      'briefs/' + slug + '/delivery.html',
-      delivHtml,
-      '📦 Add delivery: ' + (r['ページタイトル'] || '')
-    );
-
-    // 一覧ページ更新（Code.gs の updateIndex を使用）
-    updateIndex(r, slug, pageUrl);
-
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: true, pageUrl, deliveryUrl }))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-    Logger.log('BriefAPI Error: ' + err.message);
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: err.message }))
+    if ((r['action'] || 'create') === 'update') return handleUpdate(r);
+    return handleCreate(r);
+  } catch(err) {
+    Logger.log('Error: ' + err.message);
+    return ContentService.createTextOutput(JSON.stringify({ success:false, error:err.message }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// ヘルスチェック
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'GVA Brief API running ✅' }))
+  return ContentService.createTextOutput(JSON.stringify({ status:'GVA Brief API running' }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── 新規作成 ──────────────────────────────────────────
+function handleCreate(r) {
+  const deliveryEp = PropertiesService.getScriptProperties().getProperty('DELIVERY_GAS_ENDPOINT') || '';
+  const gasEp      = ScriptApp.getService().getUrl();
+  const slug       = r['slug'] || ('brief-' + Date.now());
+  const pageUrl    = BRIEF_PAGES_BASE + '/briefs/' + slug + '/';
+  const delivUrl   = pageUrl + 'delivery.html';
+
+  r['配送フォームURL'] = delivUrl;
+  const briefHtml  = buildHtml(r);
+  const delivHtml  = buildDeliveryHtml_(r, deliveryEp);
+  const dataStr    = buildDataJson_(r, slug, gasEp);
+
+  pushToGitHub('briefs/' + slug + '/index.html',    briefHtml, '✨ Add brief: '    + (r['ページタイトル'] || ''));
+  pushToGitHub('briefs/' + slug + '/delivery.html', delivHtml, '📦 Add delivery: ' + (r['ページタイトル'] || ''));
+  pushToGitHub('briefs/' + slug + '/data.json',     dataStr,   '💾 Add data: '     + (r['ページタイトル'] || ''));
+  updateIndex(r, slug, pageUrl);
+
+  return ContentService.createTextOutput(JSON.stringify({ success:true, pageUrl, deliveryUrl:delivUrl }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── 更新 ──────────────────────────────────────────────
+function handleUpdate(r) {
+  const slug = r['slug'];
+  if (!slug) throw new Error('slug が指定されていません');
+
+  let gasEp = ScriptApp.getService().getUrl();
+  try {
+    const res = UrlFetchApp.fetch(
+      'https://api.github.com/repos/' + getConfig().GITHUB_OWNER + '/' + getConfig().GITHUB_REPO +
+      '/contents/briefs/' + slug + '/data.json',
+      { headers: { Authorization: '***' + getConfig().GITHUB_TOKEN }, muteHttpExceptions: true }
+    );
+    if (res.getResponseCode() === 200) {
+      const d = JSON.parse(Utilities.newBlob(Utilities.base64Decode(JSON.parse(res.getContentText()).content)).getDataAsString());
+      gasEp = d.gasEndpoint || gasEp;
+    }
+  } catch(e) {}
+
+  r['配送フォームURL'] = BRIEF_PAGES_BASE + '/briefs/' + slug + '/delivery.html';
+  const briefHtml = buildHtml(r);
+  const dataStr   = buildDataJson_(r, slug, gasEp);
+
+  pushToGitHub('briefs/' + slug + '/index.html', briefHtml, '✏️ Update brief: ' + (r['ページタイトル'] || ''));
+  pushToGitHub('briefs/' + slug + '/data.json',  dataStr,   '✏️ Update data: '  + (r['ページタイトル'] || ''));
+  patchIndexCard_(r, slug);
+
+  return ContentService.createTextOutput(JSON.stringify({ success:true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── index.html のカードのタイトル・ブランドを書き換え ────
+function patchIndexCard_(r, slug) {
+  const cfg = getConfig();
+  const url = 'https://api.github.com/repos/' + cfg.GITHUB_OWNER + '/' + cfg.GITHUB_REPO + '/contents/index.html';
+  let html = '', sha = '';
+  try {
+    const res = UrlFetchApp.fetch(url, { headers:{ Authorization:'***'+cfg.GITHUB_TOKEN }, muteHttpExceptions:true });
+    if (res.getResponseCode() !== 200) return;
+    const d = JSON.parse(res.getContentText());
+    sha  = d.sha;
+    html = Utilities.newBlob(Utilities.base64Decode(d.content)).getDataAsString();
+  } catch(e) { return; }
+
+  const marker = 'data-slug="' + slug + '"';
+  const idx = html.indexOf(marker);
+  if (idx < 0) return;
+
+  const now = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd');
+  // brief-meta を更新
+  const metaStart = html.indexOf('class="brief-meta">', idx) + 'class="brief-meta">'.length;
+  const metaEnd   = html.indexOf('</div>', metaStart);
+  // brief-title を更新
+  const titleStart = html.indexOf('class="brief-title">', metaEnd) + 'class="brief-title">'.length;
+  const titleEnd   = html.indexOf('</div>', titleStart);
+
+  const newHtml = html.slice(0, metaStart) + esc(now) + ' ／ ' + esc(r['ブランド名'] || '') +
+                  html.slice(metaEnd, titleStart) + esc(r['ページタイトル'] || '') +
+                  html.slice(titleEnd);
+
+  if (newHtml === html) return;
+  pushToGitHub('index.html', newHtml, '📋 Update card: ' + (r['ページタイトル'] || ''));
 }
 
 // ── 配送フォーム HTML 生成 ─────────────────────────────
