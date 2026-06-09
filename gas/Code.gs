@@ -431,7 +431,7 @@ function buildIndexHtml(firstCard) {
 
 // ── HTMLテンプレート文字列 ────────────────────────
 // （別ファイルにしても良いが、デプロイ簡略化のためここに含む）
-const TEMPLATE = \`<!DOCTYPE html>
+const TEMPLATE = `<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -698,7 +698,7 @@ function copyText(blockId,btn){
 }
 </script>
 </body>
-</html>\`;
+</html>`;
 
 // ── データJSON生成 ──────────────────────────────
 function buildDataJson_(r, slug, gasEndpoint) {
