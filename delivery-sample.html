@@ -65,6 +65,40 @@
 
     /* 二次利用ラジオ */
     .radio-group { display: flex; flex-direction: column; gap: 8px; }
+    .radio-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px 12px 46px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .radio-item input[type="radio"] { display: none; }
+    .radio-item::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid #CCCCCC;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .radio-item:has(input:checked)::before {
+      border-color: #1A1A1A;
+      background: #1A1A1A;
+      box-shadow: inset 0 0 0 5px white;
+    }
+    .radio-item:has(input:checked) {
+      border-color: #1A1A1A;
+      background: #FAFAFA;
+    }
     
     
     
